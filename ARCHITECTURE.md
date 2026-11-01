@@ -11,3 +11,11 @@ Only data assets are cached; this is not a PWA. Offline fallback works when the 
 Full dataset provenance lives outside `public/`. The public JSON exposes source domains and observation date only. Candidate status remains unverified. Production publication requires deliberate moderator approval/season review in a later phase; the Phase 1 manifest deliberately declares `candidatePreview: true`.
 
 Vercel header configuration: manifest max-age 300/s-maxage 600; hash snapshots max-age one year immutable. Deploy snapshot and manifest together; retain the prior deployment for rollback. JSON payload measured at 130,234 raw / 9,225 gzip bytes before hosting compression. No chunking needed.
+
+## Phase 2A administrative extension
+
+The above Phase 1 visitor architecture is preserved. `admin/` is a separate privileged Python package, with pinned administrative dependencies outside npm/Vite. SDK imports are lazy and limited to explicit remote commands. Security Rules deny all clients, while administrative identity is authorized through IAM. Production access and update flags are off by default. No production operation was performed during implementation.
+
+Canonical IDs use SHA-256 of `2026-11\0<exact code>`; primary records start pending/unverified, separate immutable source sightings preserve evidence, and optimistic-revision review transactions write audit records. Import never changes existing code documents. Published-only data is validated and staged to a new private directory; explicit offline promotion retains prior assets/archive and atomically switches the manifest last. The checked-in preview still serves 1,132 candidates. The loader now accepts real ISO observation dates rather than only the initial fixture date; source detail displays each record's date. Existing season/history keys remain stable.
+
+Manual local CLI + reviewed publishing PR is the chosen no-cost publishing workflow. A read-only, secret-free GitHub Action validates PRs and runs demo emulator tests; it cannot import/publish. The full owner/IAM/operation budget and rollback contract is in `docs/PHASE2A_ADMIN.md`. The Phase 1 `npm run snapshot` regeneration note above is superseded: fixture regeneration is staging-only, and `npm run snapshot` stages reviewed Firestore data.

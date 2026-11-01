@@ -1,0 +1,2 @@
+# Administrative Python runtime only; never installed by the frontend build.
+firebase-admin==7.1.0

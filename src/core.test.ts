@@ -1,5 +1,8 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, mkdtempSync, rmSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   HISTORY_KEY,
   SEASON,
@@ -14,7 +17,7 @@ import {
   type Manifest,
 } from "./core";
 const manifest = JSON.parse(
-  readFileSync("public/data/manifest.json", "utf8"),
+  readFileSync("admin/tests/fixtures/preview-manifest.json", "utf8"),
 ) as Manifest;
 const raw = readFileSync(`public${manifest.snapshotUrl}`, "utf8");
 afterEach(() => vi.unstubAllGlobals());
@@ -129,5 +132,44 @@ describe("explicit next, skip and tried transitions", () => {
     state = moveForward(state.history, state.current, codes, "next");
     expect(state.current).toBeUndefined();
     expect(state.history.seen).toHaveLength(3);
+  });
+});
+
+describe("administrative snapshot compatibility", () => {
+  it("accepts the currently checked-in feed without fixing its count or order", async () => {
+    const live = JSON.parse(
+      readFileSync("public/data/manifest.json", "utf8"),
+    ) as Manifest;
+    expect(
+      await verifySnapshot(
+        live,
+        readFileSync(`public${live.snapshotUrl}`, "utf8"),
+      ),
+    ).toHaveLength(live.codeCount);
+  });
+  it("accepts deterministic Python-published records with new observation dates", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "nusuk-pipeline-"));
+    try {
+      const output = join(folder, "stage");
+      execFileSync("python3", [
+        "-c",
+        "from pathlib import Path; import sys; from admin.publishing import stage; from admin.tests.test_pipeline import record; r=record(); r['discoveredAt']='2026-11-04T00:00:00Z'; stage([r],Path(sys.argv[1]))",
+        output,
+      ]);
+      const published = JSON.parse(
+        readFileSync(join(output, "manifest.json"), "utf8"),
+      ) as Manifest;
+      const entries = await verifySnapshot(
+        published,
+        readFileSync(
+          join(output, published.snapshotUrl.split("/").pop()!),
+          "utf8",
+        ),
+      );
+      expect(entries[0].observedAt).toBe("2026-11-04");
+      expect(entries[0].status).toBe("community_submitted_unverified");
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+    }
   });
 });

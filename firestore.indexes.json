@@ -1,0 +1,8 @@
+{
+  "indexes": [],
+  "fieldOverrides": [
+    { "collectionGroup": "codes", "fieldPath": "sourceUrl", "indexes": [] },
+    { "collectionGroup": "codes", "fieldPath": "importBatch", "indexes": [] },
+    { "collectionGroup": "codes", "fieldPath": "reviewNote", "indexes": [] }
+  ]
+}

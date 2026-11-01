@@ -118,7 +118,10 @@ export async function verifySnapshot(
         /^NG-[A-Za-z0-9]{8}$/.test(c.code) &&
         c.status === "community_submitted_unverified" &&
         ["facebook.com", "services.nusuk.sa"].includes(c.source) &&
-        c.observedAt === "2026-11-01",
+        /^\d{4}-\d{2}-\d{2}$/.test(c.observedAt) &&
+        Number.isFinite(Date.parse(`${c.observedAt}T00:00:00Z`)) &&
+        new Date(`${c.observedAt}T00:00:00Z`).toISOString().slice(0, 10) ===
+          c.observedAt,
     )
   )
     throw new Error("ملف الأكواد غير متوافق");

@@ -1,22 +1,25 @@
 # مفاتيح نسك · Nusuk Codes Hub
 
-Independent Arabic-first community code browser. **Phase 1 only. Not affiliated with Nusuk.**
+Independent Arabic-first community code browser. Not affiliated with Nusuk. All codes remain **unverified**.
 
-## Run
+## Public app
 
-Node 22+ and npm. Run `npm ci`, `npm run dev` (localhost:5173).
+Node 22+. `npm ci`, `npm run dev` (localhost:5173).
 
-Checks: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`.
-Regenerate the deterministic fixture with `npm run snapshot`.
+Checks: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`. Pipeline compatibility tests also need Python 3.13 (no admin SDK required for those tests).
 
-## What ships
+Responsive RTL copy-first UI, local history/Undo/import/export, seeded unseen browsing, compact accessible tips, official links with caveats, CDN-only snapshots and cache fallback. No frontend Firebase SDK, login, online writes, trackers or privileged API. The checked-in 1,132-candidate preview is unchanged.
 
-Responsive RTL React + TypeScript + Vite + Tailwind interface, theme override/system dark mode, selectable exact-case codes, Copy, official Nusuk link, explicit Next/Skip/Tried, Undo, confirmed reset, persistent season-scoped history, cross-tab synchronization, JSON history export/merge, touch/keyboard educational strip, source disclosures, FAQs and site sharing. Loading, errors/retry, empty, exhausted, stale, maintenance, offline/cache and blocked-storage states are implemented.
+## Phase 2A administrative pipeline
 
-The supplied 1,132 candidates are a **development preview**, not approved production data. Zero have confirmed redemption. No login, personal data, trackers, Firebase SDK, backend, public submissions or automated discovery. No deployment has been performed. See [DATA_PROVENANCE.md](DATA_PROVENANCE.md).
+Implemented, but **production is not activated**. Firestore is administrative source of truth only after manual owner configuration. Every public Firestore read/write is denied by supplied Security Rules; those rules must still be deployed by the owner. Imports default to dry-run, preserve case and provenance, use deterministic IDs and bounded transactions, and never promote status. Moderation and snapshot promotion are separate explicitly confirmed operations.
 
-## Phase boundary
+Start with the full [safe activation runbook](docs/PHASE2A_ADMIN.md). It covers local/emulator setup, existing-data exports, least-privilege credentials, initial migration, future CSVs, review, staging, Git/PR publication, rollback, operation estimates and emergency stop.
 
-Phase 2 Firebase, security rules/emulator, privileged import/moderation, Phase 3 public deployment/DNS, Phase 4 collection and Phase 5 broader hardening remain deferred. No Firebase or DNS setup is needed to run Phase 1.
+Local admin checks: create `admin/.venv`, install `admin/requirements-lock.txt`, then `npm run lint:admin`, `npm run test:admin`, and (Java 21+) `npm run test:emulator`. The read-only CI workflow needs no secrets and never publishes.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md), [OPERATIONS.md](OPERATIONS.md), [SETUP_OWNER.md](SETUP_OWNER.md), and `docs/` for supplied specifications and evidence.
+`npm run validate:csv -- --input FILE.csv --season 2026-11 --observed-at ISO_TIMESTAMP` is offline. `npm run admin -- --help` lists administrative commands. `npm run snapshot` now stages published Firestore data; legacy preview regeneration is staging-only via `npm run snapshot:preview -- --output .admin-work/preview-fixture`. Nothing automatically replaces `public/data/`.
+
+User submissions, invalid-code reports, scraping, billing, Firebase scheduled services/Functions and later phases remain off. No production rule deploy, import, hosting deploy or dataset promotion was performed.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md), [OPERATIONS.md](OPERATIONS.md), [SETUP_OWNER.md](SETUP_OWNER.md), [DATA_PROVENANCE.md](DATA_PROVENANCE.md) and `docs/qa/PHASE2A_VALIDATION.md`.
