@@ -13,23 +13,8 @@ import {
   type History,
 } from "./core";
 import "./style.css";
+import { TipsTicker } from "./TipsTicker";
 
-const tips = [
-  [
-    "✦",
-    "إيه هي مفاتيح نسك؟",
-    "أكواد مشاركة من المجتمع، مش ضمان لفوز أو جائزة.",
-  ],
-  ["↗", "إزاي تستخدمها؟", "انسخ الكود أو افتح رابطه، وكمل داخل نسك الرسمي."],
-  ["◷", "هل الكود بيتكرر؟", "بنفتكر اللي شفته على نفس المتصفح، من غير حساب."],
-  [
-    "☀",
-    "كام فرصة في اليوم؟",
-    "راجع شروط تطبيق نسك لمعرفة عدد المفاتيح والفرص اليومية.",
-  ],
-  ["◇", "هل المفاتيح مضمونة؟", "لا، الأكواد دي مش متحقق من صلاحيتها داخل نسك."],
-  ["＋", "شارك كودك", "الإضافة متوقفة لحد تفعيل مراجعة وحماية آمنة."],
-];
 function initialHistory() {
   try {
     return parseHistory(localStorage.getItem(HISTORY_KEY) || "");
@@ -58,7 +43,6 @@ function App() {
   const [reset, setReset] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const cancelReset = useRef<HTMLButtonElement>(null);
-  const strip = useRef<HTMLDivElement>(null);
   const file = useRef<HTMLInputElement>(null);
   const codeFocus = useRef<HTMLHeadingElement>(null);
   const order = useMemo(
@@ -219,9 +203,10 @@ function App() {
       <header className="header">
         <a className="brand" href="#">
           <span className="brand-mark">✦</span>
-          <span>
-            مفاتيح نسك<small>من المجتمع، للمجتمع</small>
-          </span>
+          <div>
+            <h1 className="brand-title">مفاتيح نسك</h1>
+            <small>من المجتمع، للمجتمع</small>
+          </div>
         </a>
         <nav aria-label="التنقل الرئيسي">
           <a href="#how">إزاي تستخدمه؟</a>
@@ -251,61 +236,11 @@ function App() {
         </nav>
       </header>
       <main>
-        <section className="intro">
-          <div className="eyebrow">
-            <span className="dot" /> مساحة مجتمعية مستقلة{" "}
-            <span className="line" /> نوفمبر ٢٠٢٦
-          </div>
-          <h1>
-            مفتاحك الجاي،
-            <br />
-            <em>يمكن يكون هنا.</em>
-          </h1>
-          <p>
-            مساحة مجتمعية لتبادل أكواد المسابقة.
-            <br className="desktop-break" /> انسخ الكود، وكمّل خطواتك في نسك الرسمي.
-          </p>
-          <div className="trust-note">
-            ◇ أكواد مرشحة غير متحقق منها · بدون حساب
-          </div>
-          <span className="ornament" aria-hidden="true">
-            ۞
-          </span>
-        </section>
-        <section aria-label="معلومات تساعدك" className="tips-section">
-          <div className="section-overline">
-            <span>قبل ما تبدأ</span>
-            <div>
-              <button
-                aria-label="المعلومة السابقة"
-                onClick={() =>
-                  strip.current?.scrollBy({ left: 280, behavior: "instant" })
-                }
-              >
-                →
-              </button>
-              <button
-                aria-label="المعلومة التالية"
-                onClick={() =>
-                  strip.current?.scrollBy({ left: -280, behavior: "instant" })
-                }
-              >
-                ←
-              </button>
-            </div>
-          </div>
-          <div className="tips" ref={strip} tabIndex={0}>
-            {tips.map(([icon, title, text]) => (
-              <article className="tip" key={title}>
-                <span aria-hidden="true">{icon}</span>
-                <div>
-                  <h2>{title}</h2>
-                  <p>{text}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+        <div className="season-bar">
+          <span>مساحة مجتمعية مستقلة</span>
+          <span>نوفمبر ٢٠٢٦</span>
+        </div>
+        <TipsTicker />
         {(!online || feed?.cached || stale || storageWarning) && (
           <div className="banner" role="status">
             {!online ? "أنت غير متصل. " : ""}
@@ -325,10 +260,6 @@ function App() {
             الخدمة تحت الصيانة. التصفح متاح للقراءة فقط.
           </div>
         )}
-        <div className="preview-note">
-          معاينة المرحلة الأولى · ١٬١٣٢ كود مرشح بانتظار المراجعة، ولا يوجد كود
-          مؤكد التفعيل.
-        </div>
         <section
           id="browser"
           className="browse-layout"
@@ -393,37 +324,47 @@ function App() {
                     الكود حساس لحالة الحروف · انسخه زي ما هو
                   </span>
                 </div>
-                <div className="main-actions">
+                <div className="browse-actions">
                   <button
-                    className="primary"
+                    className="primary copy-code"
                     onClick={() =>
-                      void copy(current, "تم نسخ الكود. كمل الخطوات داخل نسك.")
+                      void copy(
+                        current,
+                        "تم نسخ الكود. الصقه في خانة الرمز داخل نسك.",
+                      )
                     }
                   >
                     <span aria-hidden="true">▣</span> نسخ الكود
                   </button>
+                  <button
+                    className="secondary next-code"
+                    onClick={() => advance("next")}
+                  >
+                    الكود التالي <span aria-hidden="true">←</span>
+                  </button>
+                  <div className="local-actions">
+                    <button onClick={() => advance("skipped")}>تخطي</button>
+                    <button onClick={() => advance("tried")}>
+                      جرّبت الكود ✓
+                    </button>
+                  </div>
+                </div>
+                <p className="manual-flow">
+                  انسخ الكود ← افتح تطبيق نسك ← الصقه في خانة الرمز ← اضغط تحقق
+                </p>
+                <div className="official-action">
                   <a
-                    className="secondary"
                     href={officialUrl(current)}
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-describedby="official-link-help"
                   >
-                    فتح في نسك <span aria-hidden="true">↗</span>
+                    فتح الرابط الرسمي <span aria-hidden="true">↗</span>
                   </a>
-                </div>
-                <p className="external-note">
-                  الرابط يفتح موقع / تطبيق نسك الرسمي في نافذة جديدة.
-                  <br />
-                  فتح الرابط أو نسخ الكود لا يؤكد نجاح التفعيل.
-                </p>
-                <div className="next-actions">
-                  <button className="next" onClick={() => advance("next")}>
-                    التالي <span aria-hidden="true">←</span>
-                  </button>
-                  <button onClick={() => advance("skipped")}>تخطي</button>
-                  <button onClick={() => advance("tried")}>
-                    جرّبت الكود ✓
-                  </button>
+                  <p id="official-link-help">
+                    يفتح نسك في نافذة جديدة؛ قد لا يملأ الكود أو يفتح الشاشة
+                    المطلوبة. الأفضل اللصق يدويًا.
+                  </p>
                 </div>
               </>
             )}
@@ -522,13 +463,13 @@ function App() {
               ],
               [
                 "02",
-                "انسخ أو افتح",
-                "انسخ الكود بحروفه الأصلية أو افتح رابطه مباشرة في نسك.",
+                "انسخ والصق يدويًا",
+                "انسخ الكود بحروفه الأصلية، وافتح نسك والصقه في خانة الرمز، ثم اضغط تحقق.",
               ],
               [
                 "03",
                 "كمّل داخل نسك",
-                "راجع شروط التحدي وجرّب الكود داخل التطبيق الرسمي.",
+                "لو العداد ما اتحدثش فورًا، اقفل نسك وافتحه تاني أو ارجع لشاشة المفاتيح. ده مش تأكيد نجاح التفعيل.",
               ],
             ].map(([n, title, text]) => (
               <article key={n}>
@@ -549,7 +490,8 @@ function App() {
               دي معاينة المرحلة الأولى لبيانات مرشحة، مش قائمة أكواد معتمدة.
               ١٬١٣١ كود من منشور فيسبوك صدّره مساهم، وكود واحد من رابط مشاركة
               قدّمه مستخدم. تاريخ الرصد ١ نوفمبر ٢٠٢٦ لا يثبت تاريخ النشر أو
-              أهلية الموسم. عدد الأكواد المؤكد تفعيلها: صفر.
+              أهلية الموسم. لا توجد في هذه القائمة تأكيدات تفعيل مرتبطة بأكواد
+              محددة.
             </p>
             {entry && (
               <p className="source-detail">
@@ -566,6 +508,14 @@ function App() {
         <section id="faq" className="faq">
           <h2>أسئلة على بالك</h2>
           {[
+            [
+              "فعّلت كود والعداد ما زادش؟",
+              "حسب تجارب مستخدمين، العداد ممكن يتأخر حتى بعد نجاح التفعيل. جرّب تقفل نسك وتفتحه تاني أو ترجع لشاشة المفاتيح. التأخير وحده مش دليل نجاح أو فشل الكود.",
+            ],
+            [
+              "ليه بننصح بالنسخ اليدوي؟",
+              "حسب التجارب، الرابط المباشر ممكن يفتح التطبيق من غير ما ينقلك للشاشة المطلوبة أو يملأ الكود. النسخ واللصق في خانة الرمز ثم الضغط على تحقق هو المسار الأوثق.",
+            ],
             [
               "هل الموقع تابع لنسك؟",
               "لا. مفاتيح نسك مشروع مجتمعي مستقل، غير تابع لنسك أو أي جهة حكومية.",

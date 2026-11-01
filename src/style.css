@@ -129,20 +129,6 @@ footer {
 main {
   padding: 0 24px;
 }
-.intro {
-  position: relative;
-  padding: 66px 0 44px;
-  text-align: center;
-  overflow: hidden;
-}
-.eyebrow {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted);
-  font-size: 11px;
-}
 .dot {
   display: inline-block;
   width: 6px;
@@ -150,92 +136,6 @@ main {
   border-radius: 50%;
   background: #66866c;
   margin-inline-end: 6px;
-}
-.line {
-  width: 20px;
-  height: 1px;
-  background: var(--border);
-}
-h1 {
-  font-size: clamp(40px, 5.2vw, 62px);
-  line-height: 1.5;
-  letter-spacing: -2px;
-  margin: 21px 0 15px;
-  font-weight: 700;
-}
-h1 em {
-  font-style: normal;
-  color: var(--gold);
-}
-.intro > p {
-  font-size: 15px;
-  color: var(--muted);
-}
-.trust-note {
-  font-size: 10px;
-  margin-top: 23px;
-  color: var(--muted);
-}
-.ornament {
-  position: absolute;
-  left: 0;
-  top: 35px;
-  font-size: 260px;
-  line-height: 1;
-  color: var(--gold);
-  opacity: 0.055;
-  pointer-events: none;
-  transform: rotate(15deg);
-}
-.section-overline {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: var(--muted);
-  font-size: 10px;
-  letter-spacing: 0.4px;
-}
-.section-overline button {
-  width: 44px;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  margin-inline-start: 5px;
-  font-size: 16px;
-  min-height: 32px;
-}
-.tips {
-  display: flex;
-  overflow-x: auto;
-  gap: 12px;
-  padding: 14px 0 9px;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-}
-.tip {
-  flex: 0 0 32%;
-  display: flex;
-  gap: 13px;
-  padding: 17px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  scroll-snap-align: start;
-  background: var(--card);
-}
-.tip > span {
-  color: var(--gold);
-  font-size: 21px;
-}
-.tip h2 {
-  font-size: 12px;
-  margin-bottom: 5px;
-}
-.tip p {
-  font-size: 10px;
-  color: var(--muted);
-}
-.tips-section {
-  margin-bottom: 31px;
 }
 .browse-layout {
   display: grid;
@@ -267,7 +167,7 @@ h1 em {
 }
 .code-area {
   text-align: center;
-  padding: 26px 15px 32px;
+  padding: 20px 15px 26px;
   background-image: radial-gradient(var(--border) 0.65px, transparent 0.65px);
   background-size: 12px 12px;
   background-position: center;
@@ -278,7 +178,7 @@ h1 em {
 }
 .code {
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: clamp(24px, 4vw, 43px);
+  font-size: clamp(34px, 4.6vw, 58px);
   font-weight: 600;
   letter-spacing: 1.8px;
   margin: 20px 0 13px;
@@ -317,33 +217,6 @@ h1 em {
 .secondary {
   border: 1px solid var(--border);
   background: var(--card);
-}
-.external-note {
-  text-align: center;
-  font-size: 9px;
-  color: var(--muted);
-  padding: 13px 20px 19px;
-  line-height: 1.8;
-}
-.next-actions {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 0 25px 21px;
-  font-size: 11px;
-}
-.next-actions .next {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--pale);
-  padding: 12px 17px;
-  border-radius: 8px;
-  flex: 1;
-  font-weight: bold;
-}
-.next-actions button:last-child {
-  margin-inline-start: auto;
 }
 .card-bottom {
   padding: 12px 25px;
@@ -713,36 +586,12 @@ dialog .main-actions {
   main {
     padding: 0 18px;
   }
-  .intro {
-    padding: 43px 0 32px;
-  }
-  h1 {
-    font-size: 43px;
-  }
-  .intro > p {
-    font-size: 12px;
-  }
-  .ornament {
-    left: -70px;
-    top: 55px;
-    font-size: 210px;
-  }
-  .tip {
-    flex-basis: 83%;
-    padding: 16px;
-  }
-  .tip h2 {
-    font-size: 12px;
-  }
-  .tip p {
-    font-size: 11px;
-  }
   .browse-layout {
     grid-template-columns: 1fr;
     gap: 18px;
   }
   .card-top {
-    padding: 18px;
+    padding: 14px 18px;
   }
   .main-actions {
     padding: 0 18px;
@@ -755,15 +604,11 @@ dialog .main-actions {
     gap: 7px;
   }
   .code-area {
-    padding: 23px 10px 27px;
+    padding: 16px 10px 22px;
   }
   .code {
-    font-size: clamp(24px, 7.8vw, 40px);
+    font-size: clamp(29px, 9vw, 48px);
     letter-spacing: 1px;
-  }
-  .next-actions {
-    padding-inline: 18px;
-    gap: 14px;
   }
   .progress-card {
     padding: 22px;
@@ -855,16 +700,159 @@ dialog .main-actions {
     transition: none !important;
   }
 }
-.section-overline button {
-  min-height: 44px;
-}
 .header nav > a {
   min-height: 44px;
   align-content: center;
 }
-.preview-note {
+
+/* Keep the manual copy workflow above the fold. */
+.brand-title {
+  font-size: inherit;
+  line-height: 1.4;
+  font-weight: inherit;
+}
+.season-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 0 12px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.tips-ticker {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--pale);
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+.ticker-content {
+  flex: 1;
+  min-width: 0;
+  min-height: 64px;
+}
+.ticker-label {
   font-size: 10px;
-  color: var(--gold);
-  margin: 0 0 15px;
+  color: var(--muted);
+}
+.ticker-content p {
+  font-size: 12px;
+  line-height: 1.9;
+  margin-top: 4px;
+}
+.ticker-controls {
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+}
+.ticker-controls button {
+  width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+}
+.browse-actions {
+  display: grid;
+  gap: 10px;
+  padding: 0 25px;
+}
+.browse-actions .copy-code {
+  min-height: 62px;
+  font-size: 19px;
+}
+.browse-actions .next-code {
+  min-height: 50px;
+  border: 1px solid var(--green);
+  background: var(--pale);
+  font-size: 15px;
+}
+.local-actions {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.manual-flow {
+  font-size: 12px;
+  line-height: 2;
+  text-align: center;
+  padding: 8px 25px 12px;
+}
+.official-action {
+  border-top: 1px solid var(--border);
+  text-align: center;
+  margin: 0 25px;
+  padding: 4px 0 15px;
+}
+.official-action a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.official-action p {
+  font-size: 10px;
   line-height: 1.8;
+  color: var(--muted);
+}
+.how .section-heading h2,
+.faq > h2,
+.closing h2 {
+  font-size: 22px;
+}
+@media (max-width: 760px) {
+  .header {
+    padding: 14px 18px;
+  }
+  .season-bar {
+    font-size: 10px;
+    padding: 12px 0;
+  }
+  .tips-ticker {
+    align-items: center;
+    gap: 4px;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .ticker-content {
+    flex-basis: 100%;
+    min-height: 72px;
+  }
+  .ticker-content p {
+    font-size: 11px;
+  }
+  .ticker-controls {
+    margin-inline-start: auto;
+    gap: 4px;
+  }
+  .ticker-controls button {
+    border: 0;
+    background: transparent;
+  }
+  .browse-actions {
+    padding: 0 18px;
+  }
+  .browse-actions .copy-code {
+    font-size: 18px;
+  }
+  .manual-flow {
+    font-size: 11px;
+    padding: 5px 18px 12px;
+  }
+  .official-action {
+    margin: 0 18px;
+  }
+  .official-action p {
+    font-size: 10px;
+  }
 }

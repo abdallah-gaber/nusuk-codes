@@ -21,3 +21,11 @@ Initial critical advisories were in the old Vitest/Tinypool development dependen
 ## Scope
 
 Phase 2 not started; Firebase, rules/emulator, privileged moderation/import, discovery Actions and deployment are deferred. All candidates remain unverified preview data, not approved published production codes. Submissions/reporting disabled. Cross-tab history is last-writer-wins and not a transactional database; simultaneous tab actions can lose annotations. LocalStorage and browser cache availability bound persistence/offline behavior.
+
+## Copy-first usability refinement — 2026-11-01
+
+Replaced the large intro and multi-card educational strip with a compact, eight-second tips carousel. The selectable code is now the focus, followed by full-width primary Copy and outlined Next buttons; local Skip/Tried and Undo remain available. The official link is a lower-priority text action with an associated warning that navigation/prefill may fail. The exact manual-flow instruction is below the main actions. Longer guidance/FAQs stay lower down and now cover delayed key counters and reopening/revisiting Nusuk. User observations are recorded in `docs/NUSUK_APP_EVIDENCE.md`; no per-code status was promoted.
+
+At 320px: document/client width both 320px; the code and 62px-high Copy button are visible on initial load. Browser checks verified Copy feedback without advancing, Enter on Next advances and updates counts, Undo restores code/count, and manual carousel Next selects the following tip and pauses autoplay. A paused tip remained unchanged after nine seconds; resume returns to automatic rotation after interaction ends. The component also suspends rotation for focus/hover, a hidden document and reduced-motion preference; reduced-motion preference changes were reviewed in code, not by changing the user's OS settings. New screenshots are `polish-mobile-320.jpg` and `polish-desktop.jpg`.
+
+Final lint, typecheck, existing 10 regression tests and production build: see `polish-checks.log`. The history/network implementation, dependency files, canonical CSVs and public snapshot assets are unchanged. No Firebase reads or Phase 2 work added.
