@@ -8,7 +8,9 @@ Node 22+. `npm ci`, `npm run dev` (localhost:5173).
 
 Checks: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`. Pipeline compatibility tests also need Python 3.13 (no admin SDK required for those tests).
 
-Responsive RTL copy-first UI, local history/Undo/import/export, seeded unseen browsing, compact accessible tips, official links with caveats, CDN-only snapshots and cache fallback. No frontend Firebase SDK, login, online writes, trackers or privileged API. The checked-in CDN feed contains 1,540 unverified current-season community codes; the original 1,132-code asset is retained for rollback.
+Responsive RTL copy-first UI, local history/Undo/import/export, seeded unseen browsing, compact accessible tips, official links with caveats, CDN-only snapshots and cache fallback. No frontend Firebase SDK, login, Firestore writes or privileged API. The checked-in CDN feed contains 1,540 unverified current-season community codes; the original 1,132-code asset is retained for rollback.
+
+Vercel Web Analytics is mounted once in production builds using `@vercel/analytics/react`. Enable Web Analytics in the Vercel project and deploy the reviewed change to begin collecting page views. Local development does not mount Analytics. No custom events, code values or local browsing history are sent by application tracking code; no analytics credentials or environment variables are required.
 
 ## Phase 2A administrative pipeline
 

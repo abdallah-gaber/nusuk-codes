@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { Analytics } from "@vercel/analytics/react";
 import {
   HISTORY_KEY,
   SEASON,
@@ -614,5 +615,6 @@ function App() {
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
+    {import.meta.env.PROD && <Analytics />}
   </React.StrictMode>,
 );

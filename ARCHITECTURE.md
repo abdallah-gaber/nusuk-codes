@@ -1,6 +1,6 @@
 # Phase 1 architecture
 
-Static Vite SPA. Visitor fetches `/data/manifest.json`, then the content-addressed snapshot. No Firestore reads, online writes, Functions, realtime listeners or trackers. All Next/Copy/Open actions operate locally. Tailwind is compiled with Vite; CSS decorations and system Arabic fonts avoid external font/image requests.
+Static Vite SPA. Visitor fetches `/data/manifest.json`, then the content-addressed snapshot. No Firestore reads/writes, Functions or realtime listeners. Production builds include owner-enabled Vercel Web Analytics for page views; development builds do not mount it. No custom interaction events or local history are included in analytics. All Next/Copy/Open actions operate locally. Tailwind is compiled with Vite; CSS decorations and system Arabic fonts avoid external font/image requests.
 
 Manifest carries schema, canonical `nov-2026` season (CSV `2026-11`), generation date, count, SHA-256, snapshot URL, readOnly/submissionsEnabled, maintenance and candidatePreview flags. Fetches timeout after 10 seconds. The client validates the manifest, exact count, duplicate codes, status, season, source domains and payload checksum before use. The provisional regex is a syntax check only.
 
