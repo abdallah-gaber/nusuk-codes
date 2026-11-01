@@ -1,0 +1,14 @@
+{
+  "input_rows": 1131,
+  "input_unique_exact_codes": 1131,
+  "input_duplicates": 0,
+  "invalid_input_codes": 0,
+  "existing_seed_rows": 1,
+  "overlap_with_existing": 0,
+  "unique_total": 1132,
+  "verified_in_app": 0,
+  "sources": {
+    "https://www.facebook.com/mohamed.a.abourakha/posts/pfbid0b3BRok6HtoyRNkRsBvesyCPtWX93NqgtXJ4LLtP98U4zdJi8wdVUjigfSTYw8QMAl": 1131
+  },
+  "warning": "All entries are community-sourced unverified; single Facebook post may not prove current-season validity."
+}
