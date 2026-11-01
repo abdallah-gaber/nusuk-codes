@@ -260,6 +260,12 @@ class FirestoreStore:
                 reviewPlanId=plan_id,
                 revision=record["revision"] + 1,
             )
+            if decision.get("publicationPolicy") is not None:
+                changes.update(
+                    publicationPolicy=decision["publicationPolicy"],
+                    syntaxChecked=decision.get("syntaxChecked") is True,
+                    seasonAttributed=decision.get("seasonAttributed") is True,
+                )
             tx.create(
                 ref.collection("audit").document(plan_id),
                 dict(**changes, previousStatus=record["status"]),

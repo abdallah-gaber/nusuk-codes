@@ -206,6 +206,49 @@ class EmulatorTests(unittest.TestCase):
             self.assertEqual(stored["verification"], "community_submitted_unverified")
             self.assertIs(stored["redemptionVerified"], False)
 
+    def test_policy_display_approval_keeps_redemption_unverified(self):
+        from admin.model import COMMUNITY_POLICY
+
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "policy.csv"
+            path.write_text(
+                "code,source_url\nNG-POLICY01,https://facebook.com/post/policy-test\n"
+            )
+            entries, _ = read_csv(path, SEASON, "2026-11-01T00:00:00Z")
+            self.assertFalse(
+                apply_import(self.store, entries, "policy-test", "test", "fixture")[
+                    "failed"
+                ]
+            )
+            row = self.store.get(entries[0]["id"])
+            decision = dict(
+                id=row["id"],
+                code=row["code"],
+                expectedStatus="pending",
+                expectedRevision=0,
+                status="published",
+                publicationPolicy=COMMUNITY_POLICY,
+                syntaxChecked=True,
+                seasonAttributed=True,
+                sourceReviewed=False,
+                seasonReviewed=False,
+                note="Owner community-display policy; redemption is unverified",
+            )
+            _, plan_id = review_plan(json.dumps([decision]))
+            self.assertEqual(
+                self.store.review_one(decision, plan_id, "test"), "updated"
+            )
+            self.assertEqual(
+                self.store.review_one(decision, plan_id, "test"), "alreadyApplied"
+            )
+            published = self.store.get(row["id"])
+            self.assertIs(published["redemptionVerified"], False)
+            self.assertIs(published["sourceReviewed"], False)
+            self.assertIs(published["seasonReviewed"], False)
+            self.assertEqual(published["publicationPolicy"], COMMUNITY_POLICY)
+            stage([published], Path(folder) / "stage")
+            self.assertEqual(len(self.store.export_audit(row["id"])), 1)
+
     def test_rules_deny_anonymous_and_authenticated_public_access(self):
         # Emulator accepts unsigned test tokens; they are never production credentials.
         def encode(value):

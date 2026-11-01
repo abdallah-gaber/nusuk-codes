@@ -1,0 +1,13 @@
+{
+  "original_existing_codes": 1132,
+  "input_rows": 451,
+  "input_unique_codes": 451,
+  "invalid_format": 0,
+  "input_duplicates": 0,
+  "already_existing": 43,
+  "new_codes": 408,
+  "combined_unique": 1540,
+  "input_sha256": "9aea67a9767e16965182a51a3f2a701f03050dac9698f1f65b9907a9e832adc8",
+  "verification": "Syntax and exact-case deduplication only; no validity verification within Nusuk",
+  "source_count": 1
+}

@@ -16,6 +16,7 @@ from .model import (
     canonical,
     code_id,
     digest,
+    display_approved,
     timestamp,
     validate_record,
 )
@@ -99,7 +100,7 @@ def read_pair(folder, manifest_name="manifest.json", public_root=None):
     return manifest, raw, checked_pair(manifest, raw)
 
 
-def stage(records, output, allow_empty=False):
+def stage(records, output, allow_empty=False, planning_only=False):
     if output.exists():
         raise ValueError(
             "Staging output must be a new directory; never overwrite a prior stage"
@@ -113,15 +114,16 @@ def stage(records, output, allow_empty=False):
         validate_record(record)
         if (
             record["status"] != "published"
-            or record.get("sourceReviewed") is not True
-            or record.get("seasonReviewed") is not True
+            or not display_approved(record)
             or not record.get("reviewNote")
             or not record.get("reviewedBy")
             or not record.get("reviewPlanId")
             or not isinstance(record.get("revision"), int)
             or record["revision"] < 1
         ):
-            raise ValueError("Published record lacks explicit source/season review")
+            raise ValueError(
+                "Published record lacks explicit display approval/audit metadata"
+            )
         reviewed = timestamp(record["reviewedAt"])
         observed = timestamp(record["discoveredAt"])
         domain = urlparse(record["sourceUrl"]).hostname.removeprefix("www.")
@@ -164,7 +166,10 @@ def stage(records, output, allow_empty=False):
         (temporary / Path(manifest["snapshotUrl"]).name).write_bytes(raw)
         (temporary / "manifest.json").write_text(canonical(manifest) + "\n")
         (temporary / "publication.json").write_text(
-            canonical(dict(records=inventory, snapshotSha256=sha)) + "\n"
+            canonical(
+                dict(records=inventory, snapshotSha256=sha, planningOnly=planning_only)
+            )
+            + "\n"
         )
         os.rename(temporary, output)
     finally:
@@ -261,6 +266,10 @@ def replacement_plan(root, manifest, raw, expected="", rollback=False):
 
 def validate_inventory(folder, manifest, data):
     inventory = json.loads((folder / "publication.json").read_text())
+    if inventory.get("planningOnly", False) is not False:
+        raise ValueError(
+            "Projected snapshots cannot be promoted; regenerate from published Firestore records after approval"
+        )
     records = inventory.get("records")
     expected = {code_id(SEASON, entry["code"]) for entry in data["codes"]}
     if (
