@@ -1,0 +1,20 @@
+i  emulators: Starting emulators: firestore
+i  emulators: Detected demo project ID "demo-nusuk-codes", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail.
+i  firestore: Firestore Emulator logging to firestore-debug.log
+✔  firestore: Firestore Emulator UI websocket is running on 9150.
+i  Running script: admin/.venv/bin/python -m unittest admin.tests.test_emulator -v
+test_cli_dry_run_apply_export_reconcile_and_review (admin.tests.test_emulator.EmulatorTests.test_cli_dry_run_apply_export_reconcile_and_review) ... ok
+test_end_to_end_transactions_review_and_snapshot (admin.tests.test_emulator.EmulatorTests.test_end_to_end_transactions_review_and_snapshot) ... ok
+test_legacy_id_duplicate_is_blocked_without_overwriting (admin.tests.test_emulator.EmulatorTests.test_legacy_id_duplicate_is_blocked_without_overwriting) ... ok
+test_migrate_and_replay_all_1132_candidates_in_bounded_chunks (admin.tests.test_emulator.EmulatorTests.test_migrate_and_replay_all_1132_candidates_in_bounded_chunks) ... ok
+test_rules_deny_anonymous_and_authenticated_public_access (admin.tests.test_emulator.EmulatorTests.test_rules_deny_anonymous_and_authenticated_public_access) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 11.325s
+
+OK
+✔  Script exited successfully (code 0)
+i  emulators: Shutting down emulators.
+i  firestore: Stopping Firestore Emulator
+i  hub: Stopping emulator hub
+i  logging: Stopping Logging Emulator

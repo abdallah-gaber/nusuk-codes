@@ -1,6 +1,6 @@
 # Phase 2A — administrative data management and safe publishing
 
-Implemented locally, **not activated in production**. No production Firebase access, imports, rule deployment, live snapshot promotion or hosting deployment was performed. Existing `public/data/manifest.json` and its 1,132-code preview are unchanged. Every candidate remains `community_submitted_unverified` / `redemptionVerified: false`.
+Initial implementation was local. Restricted production access is now configured; see [the current activation status](PHASE2A_ACTIVATION.md). Imports, review and public snapshot promotion remain separately gated. Existing `public/data/manifest.json` and its 1,132-code preview are unchanged. Every candidate remains `community_submitted_unverified` / `redemptionVerified: false`.
 
 ## Architecture and scope
 
@@ -58,6 +58,14 @@ unset FIRESTORE_EMULATOR_HOST
 ```
 
 Never paste a key into chat, add `VITE_` variables, commit a key/.env/export, or place it in `public/`. `.env.example` contains names/path placeholders only; Python does not automatically load `.env`. The CLI uses the default database and explicit project options, not an inferred project from the credential file. Keyless external-account ADC credentials may also be supplied via this environment path if already configured; configuring federation is not required here. GitHub Secrets are **not needed** for the provided local publishing path. Never expose admin secrets to PR workflows, forked code or `pull_request_target`.
+
+### Keyless access configured on this computer
+
+The activation session created `nusuk-codes-reader` and `nusuk-codes-editor` service accounts and matching `nusukCodesReader` / `nusukCodesEditor` project custom roles, with the owner explicitly approving those resources and service-account-level Token Creator bindings. Reader has the three read permissions described above; editor adds entity create/update only. No service-account private key was created.
+
+Use `GOOGLE_APPLICATION_CREDENTIALS` to point to the one existing, explicitly approved local ADC store, and set `NUSUK_IMPERSONATE_SERVICE_ACCOUNT` to the reader or editor service-account email. The CLI accepts only those two identities in `nusuk-codes`, rejects the reader for write commands, and rejects an ambiguous inline-credential override. Google's authentication library creates short-lived impersonation tokens **in memory** (30 minutes); no refresh-token copy or new credential profile file is created. The original ADC store remains sensitive owner-account authentication material and must be kept private/revoked if exposed.
+
+On this computer, the ignored files `.admin-work/activation/reader.env` and `editor.env` contain **only non-secret environment settings and the ADC file path**, not credential JSON. For example, `source .admin-work/activation/reader.env` prepares a read-only administrative shell. The editor profile still cannot write unless updates are enabled and the CLI receives explicit `--apply` and confirmation. These local paths do not automatically provision another developer's machine; that user needs their own authorized login and impersonation binding.
 
 The scripts do not inspect or alter billing. The owner must confirm Spark before every operational session and monitor Firebase Usage. No API gate can substitute for that manual plan check.
 
@@ -164,7 +172,7 @@ The legacy Phase 1 fixture script is now **staging-only** (`npm run snapshot:pre
 
 ## 8. Rollback and emergency stop
 
-Set `updatesEnabled: false`, stop any running operator process, and unset `NUSUK_ENABLE_PRODUCTION`, `NUSUK_FIREBASE_CREDENTIALS_JSON` and `GOOGLE_APPLICATION_CREDENTIALS` to disable new privileged sessions. Remove/revoke the service-account credential if compromised. There is no discovery schedule or public submission endpoint to disable. Current CDN browsing continues independently of Firestore or a quota outage.
+Set `updatesEnabled: false`, stop any running operator process, and unset `NUSUK_ENABLE_PRODUCTION`, `NUSUK_IMPERSONATE_SERVICE_ACCOUNT`, `NUSUK_FIREBASE_CREDENTIALS_JSON` and `GOOGLE_APPLICATION_CREDENTIALS` to disable new privileged sessions. Remove/revoke the service-account credential if compromised. There is no discovery schedule or public submission endpoint to disable. Current CDN browsing continues independently of Firestore or a quota outage.
 
 For a CDN rollback, prefer the host's previous complete deployment, or inspect a retained archive and perform a confirmed local rollback:
 

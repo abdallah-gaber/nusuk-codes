@@ -392,3 +392,37 @@ class PipelineTests(unittest.TestCase):
         (output / "publication.json").unlink()
         with self.assertRaises(FileNotFoundError):
             validate_inventory(output, manifest, data)
+
+    def test_memory_only_impersonation_is_limited_to_approved_identities(self):
+        from admin.store import impersonation_target
+
+        reader = "nusuk-codes-reader@nusuk-codes.iam.gserviceaccount.com"
+        editor = "nusuk-codes-editor@nusuk-codes.iam.gserviceaccount.com"
+        with patch.dict(
+            "os.environ",
+            {
+                "GOOGLE_APPLICATION_CREDENTIALS": "/existing/private/adc.json",
+                "NUSUK_IMPERSONATE_SERVICE_ACCOUNT": reader,
+            },
+            clear=True,
+        ):
+            self.assertEqual(impersonation_target("nusuk-codes", False), reader)
+            with self.assertRaises(ValueError):
+                impersonation_target("nusuk-codes", True)
+            with patch.dict(
+                "os.environ", {"NUSUK_IMPERSONATE_SERVICE_ACCOUNT": editor}
+            ):
+                self.assertEqual(impersonation_target("nusuk-codes", True), editor)
+            with patch.dict(
+                "os.environ",
+                {
+                    "NUSUK_IMPERSONATE_SERVICE_ACCOUNT": "other@nusuk-codes.iam.gserviceaccount.com"
+                },
+            ):
+                with self.assertRaises(ValueError):
+                    impersonation_target("nusuk-codes", False)
+            with patch.dict(
+                "os.environ", {"NUSUK_FIREBASE_CREDENTIALS_JSON": "untrusted override"}
+            ):
+                with self.assertRaises(ValueError):
+                    impersonation_target("nusuk-codes", False)

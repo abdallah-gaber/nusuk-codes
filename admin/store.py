@@ -19,8 +19,32 @@ def now():
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def impersonation_target(project, write):
+    target = os.environ.get("NUSUK_IMPERSONATE_SERVICE_ACCOUNT")
+    if not target:
+        return None
+    permitted = {
+        f"nusuk-codes-{role}@{project}.iam.gserviceaccount.com"
+        for role in ["reader", "editor"]
+    }
+    if target not in permitted or project != "nusuk-codes":
+        raise ValueError(
+            "Impersonation target must be the approved nusuk-codes reader or editor"
+        )
+    if write and target.startswith("nusuk-codes-reader@"):
+        raise ValueError("Reader identity cannot be used for write operations")
+    if os.environ.get("NUSUK_FIREBASE_CREDENTIALS_JSON") or not os.environ.get(
+        "GOOGLE_APPLICATION_CREDENTIALS"
+    ):
+        raise ValueError(
+            "Keyless impersonation requires one explicit existing ADC path and no inline credential override"
+        )
+    return target
+
+
 def connect(project, production, write, config):
     emulator = os.environ.get("FIRESTORE_EMULATOR_HOST")
+    target = None
     if emulator:
         parsed = urlparse("http://" + emulator)
         if (
@@ -45,6 +69,7 @@ def connect(project, production, write, config):
             raise ValueError(
                 "Supply NUSUK_FIREBASE_CREDENTIALS_JSON in the local environment or an explicit GOOGLE_APPLICATION_CREDENTIALS path; no implicit credential fallback"
             )
+        target = impersonation_target(project, write)
         if write and not config["updatesEnabled"]:
             raise ValueError("Updates are disabled in admin/config.json")
     # Lazy imports let CSV validation and pure tests run without any SDK/credentials.
@@ -54,6 +79,24 @@ def connect(project, production, write, config):
         from google.auth.credentials import AnonymousCredentials
 
         client = firestore.Client(project=project, credentials=AnonymousCredentials())
+    elif target:
+        import google.auth
+        from google.auth import impersonated_credentials
+
+        # The approved ADC store is read by Google's library; no refresh token is
+        # copied to a new profile, printed, or persisted. Target tokens stay in RAM.
+        source, _ = google.auth.load_credentials_from_file(
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"],
+            scopes=["https://www.googleapis.com/auth/cloud-platform"],
+            quota_project_id=project,
+        )
+        credential = impersonated_credentials.Credentials(
+            source_credentials=source,
+            target_principal=target,
+            target_scopes=["https://www.googleapis.com/auth/datastore"],
+            lifetime=1800,
+        )
+        client = firestore.Client(project=project, credentials=credential)
     else:
         import firebase_admin
         from firebase_admin import firestore as admin_firestore
