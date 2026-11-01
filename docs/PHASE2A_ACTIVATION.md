@@ -14,11 +14,17 @@
 - Exported and reconciled existing current-season code records: **0 records, no differences**. A separate bounded collection check confirmed no other code documents across seasons.
 - Validated the supplied CSV: 1,132 exact-case candidates. The first 250-code production dry-run found **250 new / 0 existing / 0 invalid / 0 within-file duplicates / 0 case variants**, with zero writes.
 
-## Import is not yet activated
+## Approved initial migration completed
 
-The owner approval request for the **pending-only initial migration** is still outstanding at this checkpoint. No production code import or review has run. `admin/config.json` remains `updatesEnabled: false`. The 1,132-code CDN preview and canonical CSV are unchanged; no code has been marked published or verified.
+After explicit owner approval, the five bounded slices created **1,132 code documents and 1,132 source records** (250 + 250 + 250 + 250 + 132). All batches completed with **zero reported failures**. Each code is `pending`, `community_submitted_unverified`, `redemptionVerified: false`, with revision 0. No review decision, audit entry or publication was fabricated.
 
-The proposed migration is five bounded slices (250, 250, 250, 250, 132), approximately 2,264 document writes, followed by an evidence export and reconciliation. It must preserve exact codes, set `pending` / `community_submitted_unverified` / `redemptionVerified: false`, and restore updates disabled at completion or failure. It does not approve public publication. The actual source/season review step remains separate.
+The post-migration evidence export contains all 1,132 codes and source records. Verification compared every document ID, exact-case code, original primary source, source sighting hash, season, file SHA, batch identifier and verification/status field to the supplied CSV. The `NG-dX626jFL` sample is preserved exactly once. Reconciliation reports no missing, extra, changed or noncanonical records and no case variants.
+
+Full export fingerprint (canonical JSON): `e116097bdeb77182557c54dbf7957612ac74c7f6677a4dc58e0947980b9d9686`. Actual exports, per-slice plans/apply reports and verification details remain private in ignored `.admin-work/activation/`.
+
+The operator restored **`updatesEnabled: false`** after the migration. No code was marked published or redemption-verified. The canonical CSV and CDN preview are unchanged; snapshot SHA-256 remains `e7812d4f1cc7887736f58e74402ffb9b6b18fa2813c05880f9ecd4dc9fdac4b1`. Initial migration therefore used exactly **2,264 document creates** (code + source), with no existing records overwritten. SDK/accounting retries can add reads; observed batch outcomes contained no failures or duplicates.
+
+**Next publication boundary:** an explicit source/season moderation decision is still required before generating and promoting a published-only snapshot. No snapshot promotion, deployment of new dataset contents, user submissions, invalid-code reports, scraping or billing upgrade was performed. Future imports must use the usual fresh dry-run/confirmation path and deliberately enable updates only for the operator session.
 
 ## Local operator access
 
