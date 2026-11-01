@@ -11,6 +11,7 @@ from urllib.parse import parse_qs, urlparse
 STATUSES = {"pending", "published", "hidden", "invalid"}
 VERIFICATION = "community_submitted_unverified"
 SEASON = "2026-11"
+COMMUNITY_POLICY = "community-current-season-v1"
 MAX_ROWS = 10000
 MAX_BYTES = 5_000_000
 
@@ -161,6 +162,8 @@ def check_review(record, decision, plan_id):
     if record is None:
         raise ValueError("Review record missing")
     validate_record(record)
+    if decision.get("status") == "published" and not display_approved(decision):
+        raise ValueError("Publication decision lacks display-policy approval")
     if record.get("reviewPlanId") == plan_id and record["status"] == decision["status"]:
         return "alreadyApplied"
     if (
@@ -171,3 +174,15 @@ def check_review(record, decision, plan_id):
     if record["code"] != decision["code"]:
         raise ValueError("Review code mismatch")
     return "ready"
+
+
+def display_approved(value):
+    """Display eligibility is distinct from redemption or independent source verification."""
+    policy = value.get("publicationPolicy")
+    if policy is not None:
+        return (
+            policy == COMMUNITY_POLICY
+            and value.get("syntaxChecked") is True
+            and value.get("seasonAttributed") is True
+        )
+    return value.get("sourceReviewed") is True and value.get("seasonReviewed") is True

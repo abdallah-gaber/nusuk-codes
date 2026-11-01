@@ -13,6 +13,7 @@ from .model import (
     check_review,
     code_id,
     digest,
+    display_approved,
     read_csv,
     validate_record,
 )
@@ -92,11 +93,9 @@ def review_plan(raw):
 
         if d["id"] != code_id(SEASON, parse_code(d["code"])):
             raise ValueError("Review ID/code mismatch")
-        if d["status"] == "published" and (
-            d.get("sourceReviewed") is not True or d.get("seasonReviewed") is not True
-        ):
+        if d["status"] == "published" and not display_approved(d):
             raise ValueError(
-                "Publication requires explicit sourceReviewed and seasonReviewed"
+                "Publication requires explicit display-policy approval or legacy source/season review"
             )
         ids.add(d["id"])
     return decisions, digest(canonical(decisions))

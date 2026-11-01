@@ -1,12 +1,12 @@
 # Phase 2A — administrative data management and safe publishing
 
-Initial implementation was local. Restricted production access is now configured; see [the current activation status](PHASE2A_ACTIVATION.md). Imports, review and public snapshot promotion remain separately gated. Existing `public/data/manifest.json` and its 1,132-code preview are unchanged. Every candidate remains `community_submitted_unverified` / `redemptionVerified: false`.
+Initial implementation was local. Restricted production access is now configured; see [the current activation status](PHASE2A_ACTIVATION.md). Imports, review and public snapshot promotion remain separately gated. The approved checked-in feed now contains 1,540 codes; see [the publication execution record](../imports/2026-11-01/PUBLICATION_RESULT.md). The original 1,132-code asset remains available for rollback. Every candidate remains `community_submitted_unverified` / `redemptionVerified: false`.
 
 ## Architecture and scope
 
 Firestore Standard, default database, project `nusuk-codes`, **Spark without billing** is the future administrative source of truth. Privileged Python CLI → explicit human review → validated local staging directory → explicit local promotion → reviewed Git PR → atomic static hosting deployment. Public browser → CDN manifest + hash snapshot only. No frontend Firebase dependency, public API, serverless request path, SDK credentials in Vite, user submissions, reports, social collection, schedule, Functions or paid backup service.
 
-Administrative publication means a moderator reviewed source and season for public community display. It does **not** mean a code was redeemed or verified by Nusuk. The public status stays unverified; `candidatePreview: true` continues to describe unverified community candidates, including administratively published records.
+Administrative publication means explicit approval for public community display under the owner’s documented policy; it does not fabricate independent source/season verification. It does **not** mean a code was redeemed or verified by Nusuk. The public status stays unverified; `candidatePreview: true` continues to describe unverified community candidates, including administratively published records.
 
 All scripts default to no production connection. CSV validation, plan parsing, snapshot verification, promotion and rollback can run without Firebase SDK imports. Remote commands require either the loopback emulator (`demo-nusuk-codes`) or **all** production gates: `--production --project nusuk-codes`, an explicit `NUSUK_ENABLE_PRODUCTION=nusuk-codes`, and an explicit credential environment variable (`NUSUK_FIREBASE_CREDENTIALS_JSON` or `GOOGLE_APPLICATION_CREDENTIALS`). Production writes additionally require enabled checked-in updates, an actor, `--apply`, and an exact command-specific confirmation token. These gates prevent mistakes; IAM is the real authorization boundary.
 
@@ -112,6 +112,12 @@ Partial failures: each code and all its new source sightings commit atomically i
 
 After migration, export another complete evidence backup and reconcile against it. Comparing to the pre-migration baseline should show deliberate new IDs only. Confirm expected totals and pending/unverified status before review.
 
+## Current display policy — 2026-11-01 update
+
+The owner's current rule is `community-current-season-v1`: display syntactically valid community codes attributed to the current season without requiring redemption testing. New review decisions may use `publicationPolicy`, `syntaxChecked: true` and `seasonAttributed: true` instead of claiming independent source/season review. Redemption stays unverified/false. Legacy source-reviewed decisions remain supported for compatibility. Policy approval is separate from permission to apply writes or publish a snapshot; all existing confirmation/update gates remain.
+
+See `imports/2026-11-01/PUBLICATION_PLAN.md` for the reconciled 408-code addition, 43 source sightings, complete projected 1,540-code snapshot, tests and rollback. `python3 -m admin.prepare --help` documents the offline, no-network planner. Its projected inventory is not promotable; actual publication must regenerate a stage from approved published Firestore records. The older examples below describe the legacy review path; do not set independent-review flags merely to satisfy an old example.
+
 ## 6. Review explicit decisions, then publish administratively
 
 Each `codes/{sha256}` ID is SHA-256 of `2026-11 + NUL + exact_case_code`. Record fields include exact code, season, primary source URL, discovery timestamp, optional actual source publication date, status (`pending|published|hidden|invalid`), verification, `redemptionVerified: false`, initial batch/file SHA, creator/time, normalized lookup for **investigation only**, and revision. Separate `sources/{hash}` documents retain additional sightings; `audit/{planHash}` records status changes with previous status, note, actor, time and revision.
@@ -133,7 +139,7 @@ From the export, create a private JSON review plan for **selected** records, max
 ]
 ```
 
-Do not set evidence booleans without review or publish every candidate merely because its syntax matches. Use `hidden` or `invalid` to stop future display after review; no irreversible deletion. Re-publishing also requires explicit evidence. Save the plan at `.admin-work/review.json`:
+Do not set independent-review booleans without evidence. Under the new owner policy, valid current-season community codes may instead receive explicit policy-based display approval without redemption testing. Use `hidden` or `invalid` to stop future display after review; no irreversible deletion. Re-publishing also requires explicit evidence. Save the plan at `.admin-work/review.json`:
 
 ```sh
 npm run admin -- review --project nusuk-codes --production --input .admin-work/review.json --dry-run

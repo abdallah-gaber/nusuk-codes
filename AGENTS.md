@@ -9,3 +9,5 @@ Preserve Phase 1: polished mobile-first Arabic RTL static Vite+React+TypeScript 
 All Nov 2026 candidates are unverified. Preserve case (NG- plus 8 alphanumerics provisional), source provenance, and exact deduplication. Build public browsing CDN-first via static JSON; never query Firestore for each Next. Firestore Spark must stay no-billing. Don't commit credentials or enable public write permissions. User submissions can be off until genuine server-side abuse controls exist. Report-invalid after 10 independent reports is post-MVP, with review not irreversible deletion.
 
 This is an independent community project, not official Nusuk.
+
+Current owner display policy: `community-current-season-v1` permits syntactically valid current-season community codes without redemption verification. Keep redemption status unverified, preserve provenance and exact case, and distinguish display-policy approval from independent source/season verification. Planning is read-only; production writes and snapshot publication still require explicit approval.
