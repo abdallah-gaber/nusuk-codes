@@ -5,6 +5,8 @@ import json
 import os
 import tempfile
 import unittest
+import io
+from contextlib import redirect_stdout
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
@@ -13,6 +15,9 @@ from admin.cli import apply_import, parser, plan_import, reconcile, review_plan,
 from admin.model import SEASON, code_id, read_csv
 from admin.publishing import read_pair, stage
 from admin.store import connect
+from admin.incremental import new_record
+from admin.incremental_store import IncrementalStore
+from admin.update import parser as update_parser, run as update_run
 
 HOST = os.environ.get("FIRESTORE_EMULATOR_HOST", "")
 PROJECT = "demo-nusuk-codes"
@@ -26,6 +31,138 @@ class EmulatorTests(unittest.TestCase):
         cls.store = connect(
             PROJECT, False, True, dict(updatesEnabled=False, projectId="nusuk-codes")
         )
+
+    def test_quick_import_batch_rpc_snapshot_and_idempotent_replay(self):
+        adapter = IncrementalStore(self.store)
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "admin").mkdir()
+            (root / "admin/config.json").write_text(
+                json.dumps(
+                    dict(
+                        projectId="nusuk-codes",
+                        season=SEASON,
+                        updatesEnabled=False,
+                        quickImportEnabled=True,
+                        maxExportRecords=5000,
+                    )
+                )
+            )
+            original = (root / "admin/config.json").read_bytes()
+            baseline = adapter.published(SEASON, 5000)
+            if not baseline:
+                source_evidence = dict(
+                    sourceUrl="https://facebook.com/post/quick-base",
+                    discoveredAt="2026-11-01T00:00:00Z",
+                    sourcePublishedAt=None,
+                )
+                base_candidate = dict(
+                    id=code_id(SEASON, "NG-QIKBASE1"),
+                    code="NG-QIKBASE1",
+                    season=SEASON,
+                    sources=[source_evidence],
+                )
+                base = new_record(
+                    base_candidate, "emulator-base", "test", "2026-11-01T00:00:00Z"
+                )
+                adapter.create_batch(
+                    [(base, base_candidate["sources"])],
+                    "emulator-base",
+                    "test",
+                    "emulator-base",
+                )
+                baseline = adapter.published(SEASON, 5000)
+            stage(baseline, root / "public/data")
+            source = root / "incoming.csv"
+            source.write_text(
+                "code,source_url,season\n"
+                + "".join(
+                    f"NG-QIK{i:05d},https://facebook.com/post/quick,2026-11\n"
+                    for i in range(1, 106)
+                )
+            )
+            args = update_parser().parse_args(
+                [
+                    "--file",
+                    str(source),
+                    "--dry-run",
+                    "--observed-at",
+                    "2026-11-01T00:00:00Z",
+                    "--project",
+                    PROJECT,
+                    "--prepare-only",
+                    "--actor",
+                    "emulator-owner",
+                ]
+            )
+
+            def latest_plan():
+                files = sorted(
+                    (root / ".admin-work/quick-import").glob("*/attempt-*/plan.json")
+                )
+                return json.loads(files[-1].read_text())
+
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(
+                    update_run(args, root, factory=lambda *a: self.store), 0
+                )
+                first = latest_plan()
+                self.assertEqual(first["new"], 105)
+                args.apply, args.dry_run, args.confirm = (
+                    True,
+                    False,
+                    first["confirmation"],
+                )
+                self.assertEqual(
+                    update_run(args, root, factory=lambda *a: self.store), 0
+                )
+                args.apply, args.dry_run = False, True
+                self.assertEqual(
+                    update_run(args, root, factory=lambda *a: self.store), 0
+                )
+                replay = latest_plan()
+                self.assertEqual(replay["estimatedOperations"]["writes"], 0)
+                args.apply, args.dry_run, args.confirm = (
+                    True,
+                    False,
+                    replay["confirmation"],
+                )
+                self.assertEqual(
+                    update_run(args, root, factory=lambda *a: self.store), 0
+                )
+            manifest, _, data = read_pair(root / "public/data")
+            self.assertEqual(manifest["codeCount"], first["expectedPublishedCount"])
+            self.assertEqual(
+                len({r["code"] for r in data["codes"]}), len(data["codes"])
+            )
+            self.assertEqual((root / "admin/config.json").read_bytes(), original)
+            for code in ["NG-QIK00001", "NG-QIK00002"]:
+                identity = code_id(SEASON, code)
+                row = self.store.get(identity)
+                self.assertEqual(row["status"], "published")
+                self.assertFalse(row["redemptionVerified"])
+                self.assertEqual(len(self.store.export_sources(identity)), 1)
+                self.assertEqual(len(self.store.export_audit(identity)), 1)
+            # A create precondition conflict must abort the ENTIRE write batch.
+            candidates, report = read_csv(source, SEASON, "2026-11-01T00:00:00Z")
+            fresh = dict(
+                candidates[0], code="NG-QIK99999", id=code_id(SEASON, "NG-QIK99999")
+            )
+            items = [
+                (
+                    new_record(
+                        c, report["inputSha256"], "test", "2026-11-01T00:00:00Z"
+                    ),
+                    c["sources"],
+                )
+                for c in [fresh, candidates[0]]
+            ]
+            with self.assertRaises(Exception):
+                adapter.create_batch(
+                    items, report["inputSha256"], "test", report["inputSha256"]
+                )
+            self.assertIsNone(self.store.get(fresh["id"]))
+            self.assertEqual(self.store.export_sources(fresh["id"]), [])
 
     def test_cli_dry_run_apply_export_reconcile_and_review(self):
         with tempfile.TemporaryDirectory() as folder:

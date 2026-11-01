@@ -161,6 +161,12 @@ def parser():
     p.add_argument("--offset", type=int, default=0)
     p.add_argument("--limit", type=int)
     p.add_argument("--with-evidence", action="store_true")
+    p.add_argument(
+        "--read-budget",
+        type=int,
+        default=5000,
+        help="Evidence-export read cap, 1–20000; periodic backups only",
+    )
     p.add_argument("--expect-current", default="")
     p.add_argument("--allow-removals", action="store_true")
     p.add_argument("--allow-empty", action="store_true")
@@ -195,6 +201,10 @@ def run(args):
             "This application is configured for 2026-11; never publish another season silently"
         )
     command = args.command
+    if not 1 <= args.read_budget <= 20000 or (
+        args.read_budget != 5000 and not (command == "export" and args.with_evidence)
+    ):
+        raise ValueError("Read budget is bounded and applies only to evidence export")
     if command not in {"import", "review", "promote", "rollback"} and (
         args.apply or args.dry_run
     ):
@@ -322,7 +332,7 @@ def run(args):
         return manifest, False
     if command == "export":
         if args.with_evidence:
-            remaining_reads = 5000 - len(rows)
+            remaining_reads = args.read_budget - len(rows)
             for row in rows:
                 for key, exporter in [
                     ("sources", store.export_sources),

@@ -1,0 +1,24 @@
+{
+  "exampleOnly": true,
+  "dataSource": "Synthetic 500-code fixture against an assumed 1540-code baseline; zero production requests",
+  "inputSha256": "ac15cbe7007002dc8735052662e498ddf2725eb86489ffceea638bf2db5da13b",
+  "season": "2026-11",
+  "new": 500,
+  "existing": 0,
+  "existingStatuses": {},
+  "invalid": 0,
+  "crossSeasonConflicts": 0,
+  "caseVariants": 0,
+  "duplicates": 0,
+  "expectedFinalCount": 2040,
+  "expectedPublishedCount": 2040,
+  "snapshotRequired": true,
+  "estimatedOperations": {
+    "reads": 3081,
+    "writes": 1500,
+    "requiredReadHeadroom": 3698,
+    "requiredWriteHeadroom": 1800
+  },
+  "blocked": false,
+  "confirmation": "UPDATE 2026-11 <use actual fresh dry-run planId>"
+}

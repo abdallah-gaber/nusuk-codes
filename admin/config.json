@@ -2,6 +2,7 @@
   "projectId": "nusuk-codes",
   "season": "2026-11",
   "updatesEnabled": false,
+  "quickImportEnabled": false,
   "maxImportCodes": 250,
   "maxExportRecords": 5000
 }
