@@ -12,11 +12,13 @@
     "snapshot": "admin/.venv/bin/python -m admin.cli snapshot",
     "admin": "admin/.venv/bin/python -m admin.cli",
     "validate:csv": "python3 -m admin.cli validate",
-    "test:admin": "python3 -m unittest admin.tests.test_pipeline admin.tests.test_publication -v",
+    "test:admin": "python3 -m unittest admin.tests.test_pipeline admin.tests.test_publication admin.tests.test_incremental -v",
     "lint:admin": "admin/.venv/bin/ruff check admin scripts",
     "test:emulator": "npm exec --yes --package firebase-tools@15.1.0 -- firebase emulators:exec --project demo-nusuk-codes --only firestore \"admin/.venv/bin/python -m unittest admin.tests.test_emulator -v\"",
     "snapshot:preview": "python3 scripts/build_snapshot.py",
-    "ingest": "admin/.venv/bin/python -m admin.cli import"
+    "ingest": "admin/.venv/bin/python -m admin.cli import",
+    "codes:update": "admin/.venv/bin/python -m admin.update",
+    "codes:verify-live": "admin/.venv/bin/python -m admin.check_cdn"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

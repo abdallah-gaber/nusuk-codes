@@ -25,3 +25,5 @@ Local admin checks: create `admin/.venv`, install `admin/requirements-lock.txt`,
 User submissions, invalid-code reports, scraping, billing, Firebase scheduled services/Functions and later phases remain off. The existing deny-all rules were preserved and index exemptions deployed. The owner explicitly approved the reconciled 408-code addition and policy-based community publication. See the [publication execution record and rollback instructions](imports/2026-11-01/PUBLICATION_RESULT.md).
 
 See [ARCHITECTURE.md](ARCHITECTURE.md), [OPERATIONS.md](OPERATIONS.md), [SETUP_OWNER.md](SETUP_OWNER.md), [DATA_PROVENANCE.md](DATA_PROVENANCE.md) and `docs/qa/PHASE2A_VALIDATION.md`.
+
+Routine CSV updates now have a one-confirmation incremental CLI: `npm run codes:update -- --file FILE.csv --dry-run` / `--apply`. See [QUICK_IMPORT.md](docs/QUICK_IMPORT.md) for activation gates, quota estimates, PR handoff, periodic backups and rollback. Quick-import writes remain disabled by default.
