@@ -15,6 +15,8 @@ import {
 } from "./core";
 import "./style.css";
 import { TipsTicker } from "./TipsTicker";
+import { CodeList } from "./CodeList";
+import { getProgress } from "./discovery";
 
 function initialHistory() {
   try {
@@ -125,12 +127,13 @@ function App() {
     return () => clearTimeout(timer);
   }, [notice]);
   const entry = feed?.codes.find((e) => e.code === current);
-  const codeSet = useMemo(
-    () => new Set(feed?.codes.map((e) => e.code)),
-    [feed],
+  const progress = useMemo(
+    () => getProgress(feed?.codes || [], history),
+    [feed, history],
   );
-  const count = (items: string[]) => items.filter((c) => codeSet.has(c)).length;
-  const remaining = order.filter((e) => !history.seen.includes(e.code)).length;
+  const percentage = progress.percentage > 0 && progress.percentage < 0.1
+    ? "أقل من ٠٫١٪"
+    : `${Math.min(progress.percentage, progress.remaining ? 99.9 : 100).toLocaleString("ar-EG", { maximumFractionDigits: 1 })}٪`;
   function advance(action: "next" | "skipped" | "tried") {
     setUndo({ history, current });
     const next = moveForward(history, current, order, action);
@@ -394,25 +397,30 @@ function App() {
               <br />
               من غير حساب أو بيانات شخصية.
             </p>
-            <div className="stats">
-              <div>
-                <strong>{remaining.toLocaleString("ar-EG")}</strong>
-                <span>كود متبقي</span>
-              </div>
-              <div>
-                <strong>{count(history.seen).toLocaleString("ar-EG")}</strong>
-                <span>كود شفته</span>
-              </div>
+            <div className="progress-summary">
+              <span>الإجمالي <b>{progress.total.toLocaleString("ar-EG")}</b> كود</span>
+              <strong>{percentage}</strong>
             </div>
             <progress
               aria-label="نسبة الأكواد التي شاهدتها"
-              value={count(history.seen)}
-              max={order.length || 1}
+              aria-valuetext={`شاهدت ${progress.seen.toLocaleString("ar-EG")} من ${progress.total.toLocaleString("ar-EG")} · ${percentage}`}
+              value={progress.seen}
+              max={progress.total || 1}
             />
+            <div className="stats">
+              <div>
+                <strong>{progress.remaining.toLocaleString("ar-EG")}</strong>
+                <span>كود متبقي</span>
+              </div>
+              <div>
+                <strong>{progress.seen.toLocaleString("ar-EG")}</strong>
+                <span>كود شفته</span>
+              </div>
+            </div>
             <div className="local-counts">
-              <span>جرّبت {count(history.tried).toLocaleString("ar-EG")}</span>
+              <span>جرّبت <b>{progress.tried.toLocaleString("ar-EG")}</b></span>
               <span>
-                تخطّيت {count(history.skipped).toLocaleString("ar-EG")}
+                تخطّيت <b>{progress.skipped.toLocaleString("ar-EG")}</b>
               </span>
             </div>
             <details>
@@ -437,6 +445,8 @@ function App() {
             </div>
           </aside>
         </section>
+        <CodeList entries={feed?.codes || []} history={history} loading={loading} error={!!error}
+          onCopy={(code) => void copy(code, "تم نسخ الكود. النسخ من القائمة لا يغيّر سجلك.")} />
         <div className="freshness">
           <span>
             ◷ آخر تحديث:{" "}
