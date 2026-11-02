@@ -252,7 +252,16 @@ def write_groups(items):
         yield group
 
 
-def execute_update(store, candidates, plan, old, root, output, actor, applied_at):
+def execute_update(
+    store, candidates, plan, old, root, output, actor, applied_at, *, capacity
+):
+    if type(capacity) is not int or not 1 <= capacity <= 10000:
+        raise UpdateStopped("Invalid publication capacity")
+    if (
+        plan["expectedFinalCount"] > capacity
+        or plan["expectedPublishedCount"] > capacity
+    ):
+        raise UpdateStopped("Approved totals exceed configured publication capacity")
     if plan["blocked"]:
         raise UpdateStopped("Blocked plan cannot be applied")
     # Persist before the first write, not after it. No full evidence backup here.
@@ -358,7 +367,7 @@ def execute_update(store, candidates, plan, old, root, output, actor, applied_at
             )
             save(output / "result.json", result)
             return result
-        records = store.published(SEASON, 5000)
+        records = store.published(SEASON, capacity)
         if len(records) != plan["expectedPublishedCount"]:
             raise UpdateStopped("Unexpected published count; CDN unchanged")
         manifest = stage(records, output / "snapshot")
