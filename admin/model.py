@@ -49,7 +49,12 @@ def safe_source(value):
     url = urlparse(value)
     if (
         url.scheme != "https"
-        or url.hostname not in {"www.facebook.com", "facebook.com", "services.nusuk.sa"}
+        or url.hostname not in {
+    "www.facebook.com",
+    "facebook.com",
+    "services.nusuk.sa",
+    "script.google.com",
+}
         or url.username
         or url.password
         or url.port not in (None, 443)
