@@ -73,7 +73,8 @@ def create_pr(root, plan, result, output, expected_base):
     git(root, "push", "-u", "origin", branch)
     body = output / "pr.md"
     body.write_text(
-        f"Routine incremental update: {plan['new']} new codes; {plan['existing']} existing records untouched.\n\n"
+        f"Routine incremental update: {plan['new']} new codes; {plan['existing']} existing code documents unchanged; "
+        f"{plan['additionalSourceRecords']} additional source sightings.\n\n"
         f"Complete published-only snapshot: {result['codeCount']} codes, SHA-256 `{result['snapshotSha256']}`. "
         "Touched records/counts verified. Schema, checksum, public fields and additive-only preservation passed. "
         f"Previous manifest: `{manifest['backup']}`; old immutable assets retained.\n\n"

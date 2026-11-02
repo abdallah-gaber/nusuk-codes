@@ -41,6 +41,8 @@ def summarize(plan):
             "new",
             "existing",
             "existingStatuses",
+            "additionalSourceRecords",
+            "existingSourceRecords",
             "invalid",
             "crossSeasonConflicts",
             "caseVariants",
@@ -52,6 +54,29 @@ def summarize(plan):
             "blocked",
             "confirmation",
         ]
+    }
+
+
+def source_path(identity, evidence):
+    return f"codes/{identity}/sources/{digest(canonical(evidence))}"
+
+
+def source_record(evidence, batch_id, actor, input_hash, recorded_at):
+    return dict(
+        **evidence,
+        importBatch=batch_id,
+        inputSha256=input_hash,
+        recordedBy=actor,
+        recordedAt=recorded_at,
+    )
+
+
+def existing_sightings(candidates, old):
+    return {
+        source_path(c["id"], evidence): evidence
+        for c in candidates
+        if old[c["id"]] is not None
+        for evidence in c["sources"]
     }
 
 
@@ -86,11 +111,23 @@ def plan_update(store, candidates, csv_report, current, observed_at, cap):
                 raise UpdateStopped("Invalid existing revision")
     new = [c for c in candidates if old[c["id"]] is None]
     existing = [r for r in old.values() if r is not None]
+    sightings = existing_sightings(candidates, old)
+    source_state = store.get_sources(sorted(sightings))
+    if set(source_state) != set(sightings):
+        raise UpdateStopped("Incomplete source-sighting lookup")
+    for path, evidence in sightings.items():
+        saved = source_state[path]
+        if saved is not None and any(saved.get(k) != v for k, v in evidence.items()):
+            raise UpdateStopped(
+                "Existing source ID/evidence mismatch; never overwrite provenance"
+            )
+    additional = [path for path, saved in source_state.items() if saved is None]
+    source_parents = {path.split("/")[1] for path in additional}
     wrong_season_rows = [
         r for r in csv_report["invalid"] if "different season" in r["reason"]
     ]
     invalid = len(csv_report["invalid"]) - len(wrong_season_rows)
-    writes = sum(2 + len(c["sources"]) for c in new)
+    writes = sum(2 + len(c["sources"]) for c in new) + len(additional)
     # Count aggregations charge per 1000 index entries (minimum one). Include
     # preflight, one touched-record verification, one post-count and one snapshot.
     snapshot_required = bool(new) or published != current["codeCount"]
@@ -99,14 +136,18 @@ def plan_update(store, candidates, csv_report, current, observed_at, cap):
         + lookup_reads
         + max(1, math.ceil(total / 1000))
         + max(1, math.ceil(published / 1000))
+        + len(sightings)
     )
-    reads = preflight_reads + (
-        len(candidates)
-        + max(1, math.ceil((total + len(new)) / 1000))
-        + max(1, published + len(new))
-        if snapshot_required
-        else 0
+    reads = (
+        preflight_reads
+        + (
+            len(candidates) + max(1, math.ceil((total + len(new)) / 1000))
+            if snapshot_required or additional
+            else 0
+        )
+        + (max(1, published + len(new)) if snapshot_required else 0)
     )
+    reads += len(source_parents) + len(additional)
     checkpoint = [
         dict(
             id=i,
@@ -126,6 +167,16 @@ def plan_update(store, candidates, csv_report, current, observed_at, cap):
         new=len(new),
         existing=len(existing),
         existingStatuses=dict(Counter(r["status"] for r in existing)),
+        additionalSourceRecords=len(additional),
+        existingSourceRecords=len(sightings) - len(additional),
+        sourceCheckpoint=[
+            dict(
+                path=path,
+                exists=saved is not None,
+                recordSha256=digest(canonical(saved)) if saved is not None else None,
+            )
+            for path, saved in sorted(source_state.items())
+        ],
         invalid=invalid,
         invalidSamples=csv_report["invalid"][:5],
         crossSeasonConflicts=len(cross) + len(wrong_season_rows),
@@ -207,7 +258,11 @@ def execute_update(store, candidates, plan, old, root, output, actor, applied_at
     # Persist before the first write, not after it. No full evidence backup here.
     save(
         output / "checkpoint.json",
-        dict(planId=plan["planId"], affected=plan["checkpoint"]),
+        dict(
+            planId=plan["planId"],
+            affected=plan["checkpoint"],
+            sources=plan["sourceCheckpoint"],
+        ),
     )
     items = [
         (
@@ -218,17 +273,34 @@ def execute_update(store, candidates, plan, old, root, output, actor, applied_at
         if old[c["id"]] is None
     ]
     expected = dict(old) | {r["id"]: r for r, _ in items}
+    sightings = existing_sightings(candidates, old)
+    source_items = [
+        (
+            row["path"],
+            source_record(
+                sightings[row["path"]],
+                plan["inputSha256"],
+                actor,
+                plan["inputSha256"],
+                applied_at,
+            ),
+        )
+        for row in plan["sourceCheckpoint"]
+        if not row["exists"]
+    ]
     result = dict(
         planId=plan["planId"],
         status="importing",
         confirmedCreated=0,
+        confirmedSourceCreates=0,
         completedBatches=0,
         uncertainBatchIds=[],
+        uncertainSourcePaths=[],
         deployed=False,
     )
     save(output / "result.json", result)
     try:
-        if not plan["snapshotRequired"]:
+        if not plan["snapshotRequired"] and not source_items:
             current, _, _ = read_pair(root / "public/data")
             if current["snapshotSha256"] != plan["currentSnapshotSha256"]:
                 raise UpdateStopped("Local manifest changed during no-op planning")
@@ -247,6 +319,26 @@ def execute_update(store, candidates, plan, old, root, output, actor, applied_at
             result["completedBatches"] += 1
             result["uncertainBatchIds"] = []
             save(output / "result.json", result)
+        if source_items:
+            parents = sorted({path.split("/")[1] for path, _ in source_items})
+            if store.get_many(parents) != {i: old[i] for i in parents}:
+                raise UpdateStopped("Existing parent changed before source append")
+            for offset in range(0, len(source_items), 250):
+                group = source_items[offset : offset + 250]
+                result.update(
+                    status="adding-sources",
+                    uncertainSourcePaths=[path for path, _ in group],
+                )
+                save(output / "result.json", result)
+                store.create_sources(group)
+                result["confirmedSourceCreates"] += len(group)
+                result["completedBatches"] += 1
+                result["uncertainSourcePaths"] = []
+                save(output / "result.json", result)
+            if store.get_sources([path for path, _ in source_items]) != dict(
+                source_items
+            ):
+                raise UpdateStopped("Source records differ from confirmed append plan")
         result["status"] = "verifying"
         touched = store.get_many(sorted(expected))
         if touched != expected:
@@ -255,6 +347,17 @@ def execute_update(store, candidates, plan, old, root, output, actor, applied_at
             )
         if store.count(SEASON) != plan["expectedFinalCount"]:
             raise UpdateStopped("Unexpected final document count; CDN unchanged")
+        if not plan["snapshotRequired"]:
+            current, _, _ = read_pair(root / "public/data")
+            if current["snapshotSha256"] != plan["currentSnapshotSha256"]:
+                raise UpdateStopped("Local manifest changed during source-only import")
+            result.update(
+                status="sources-updated",
+                codeCount=current["codeCount"],
+                snapshotSha256=current["snapshotSha256"],
+            )
+            save(output / "result.json", result)
+            return result
         records = store.published(SEASON, 5000)
         if len(records) != plan["expectedPublishedCount"]:
             raise UpdateStopped("Unexpected published count; CDN unchanged")

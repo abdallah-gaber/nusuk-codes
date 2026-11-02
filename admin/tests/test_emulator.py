@@ -230,6 +230,141 @@ class EmulatorTests(unittest.TestCase):
             self.assertFalse(run(review)[1])
             self.assertEqual(self.store.get(identity)["status"], "hidden")
 
+    def test_quick_existing_source_appends_leave_parent_update_times_unchanged(self):
+        from google.api_core.exceptions import AlreadyExists
+        from admin.incremental import source_path
+
+        adapter = IncrementalStore(self.store)
+        evidence = dict(
+            sourceUrl="https://facebook.com/post/original-evidence",
+            discoveredAt="2026-11-01T00:00:00Z",
+            sourcePublishedAt=None,
+        )
+        seeds = []
+        for n, status in enumerate(["published", "hidden", "invalid", "pending"], 1):
+            code = f"NG-EVD{n:05d}"
+            candidate = dict(
+                id=code_id(SEASON, code), code=code, season=SEASON, sources=[evidence]
+            )
+            row = new_record(candidate, "evidence-seed", "test", "2026-11-01T00:00:00Z")
+            row["status"] = status
+            seeds.append((row, [evidence]))
+        adapter.create_batch(seeds, "evidence-seed", "test", "evidence-seed")
+        refs = [
+            self.store.client.collection("codes").document(row["id"])
+            for row, _ in seeds
+        ]
+        before = {
+            d.id: (d.to_dict(), d.update_time)
+            for d in self.store.client.get_all(refs, retry=None, timeout=30)
+        }
+        audits = {row["id"]: self.store.export_audit(row["id"]) for row, _ in seeds}
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "admin").mkdir()
+            (root / "admin/config.json").write_text(
+                json.dumps(
+                    dict(
+                        projectId="nusuk-codes",
+                        season=SEASON,
+                        updatesEnabled=False,
+                        quickImportEnabled=True,
+                        maxExportRecords=5000,
+                    )
+                )
+            )
+            stage(adapter.published(SEASON, 5000), root / "public/data")
+            manifest_before = (root / "public/data/manifest.json").read_bytes()
+            source = root / "sightings.csv"
+            source.write_text(
+                "code,source_url,season\n"
+                + "".join(
+                    f"{row['code']},https://facebook.com/post/additional-evidence,2026-11\n"
+                    for row, _ in seeds
+                )
+            )
+            args = update_parser().parse_args(
+                [
+                    "--file",
+                    str(source),
+                    "--dry-run",
+                    "--project",
+                    PROJECT,
+                    "--observed-at",
+                    "2026-11-02T00:00:00Z",
+                    "--prepare-only",
+                    "--actor",
+                    "source-owner",
+                ]
+            )
+
+            def latest():
+                paths = sorted(
+                    (root / ".admin-work/quick-import").glob("*/attempt-*/plan.json")
+                )
+                return json.loads(paths[-1].read_text())
+
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(
+                    update_run(args, root, factory=lambda *a: self.store), 0
+                )
+                first = latest()
+                self.assertEqual(first["new"], 0)
+                self.assertEqual(first["additionalSourceRecords"], 4)
+                self.assertEqual(first["estimatedOperations"]["writes"], 4)
+                self.assertFalse(first["snapshotRequired"])
+                args.apply, args.dry_run, args.confirm = (
+                    True,
+                    False,
+                    first["confirmation"],
+                )
+                self.assertEqual(
+                    update_run(args, root, factory=lambda *a: self.store), 0
+                )
+                args.apply, args.dry_run = False, True
+                self.assertEqual(
+                    update_run(args, root, factory=lambda *a: self.store), 0
+                )
+                replay = latest()
+                self.assertEqual(replay["additionalSourceRecords"], 0)
+                self.assertEqual(replay["estimatedOperations"]["writes"], 0)
+                args.apply, args.dry_run, args.confirm = (
+                    True,
+                    False,
+                    replay["confirmation"],
+                )
+                self.assertEqual(
+                    update_run(args, root, factory=lambda *a: self.store), 0
+                )
+            self.assertEqual(
+                (root / "public/data/manifest.json").read_bytes(), manifest_before
+            )
+            after = {
+                d.id: (d.to_dict(), d.update_time)
+                for d in self.store.client.get_all(refs, retry=None, timeout=30)
+            }
+            self.assertEqual(after, before)
+            self.assertEqual(
+                {row["id"]: self.store.export_audit(row["id"]) for row, _ in seeds},
+                audits,
+            )
+            self.assertTrue(
+                all(len(self.store.export_sources(row["id"])) == 2 for row, _ in seeds)
+            )
+            rows, _ = read_csv(source, SEASON, "2026-11-02T00:00:00Z")
+            paths = [source_path(row["id"], row["sources"][0]) for row in rows]
+            saved = adapter.get_sources(paths)
+            fresh_path = source_path(
+                rows[0]["id"],
+                dict(evidence, sourceUrl="https://facebook.com/post/race"),
+            )
+            # One existing source precondition must reject the whole batch.
+            with self.assertRaises(AlreadyExists):
+                adapter.create_sources(
+                    [(paths[0], saved[paths[0]]), (fresh_path, dict(evidence))]
+                )
+            self.assertIsNone(adapter.get_sources([fresh_path])[fresh_path])
+
     def test_end_to_end_transactions_review_and_snapshot(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "codes.csv"

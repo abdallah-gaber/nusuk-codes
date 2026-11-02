@@ -9,7 +9,13 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from admin.incremental import execute_update, plan_update, save
+from admin.incremental import (
+    execute_update,
+    plan_update,
+    save,
+    source_path,
+    source_record,
+)
 from admin.model import SEASON, code_id, read_csv
 from admin.publishing import read_pair, replace_manifest, stage
 from admin.tests.test_pipeline import DATE, record
@@ -28,6 +34,10 @@ class QuickMemoryStore:
         self.fail_read = None
         self.snapshot_queries = 0
         self.costs = []
+        self.source_documents = {}
+        self.source_batches = 0
+        self.fail_source_batch = None
+        self.lost_source_response = False
 
     def get_many(self, identities):
         if self.fail_read == "lookup":
@@ -47,6 +57,30 @@ class QuickMemoryStore:
         if not matches:
             reads = 2 * ((len(values) + 29) // 30)
         return copy.deepcopy(matches), reads
+
+    def get_sources(self, paths):
+        if paths and self.fail_read == "source_lookup":
+            raise ConnectionError("offline source lookup")
+        return {path: copy.deepcopy(self.source_documents.get(path)) for path in paths}
+
+    def create_sources(self, items):
+        self.source_batches += 1
+        if (
+            self.fail_source_batch == self.source_batches
+            and not self.lost_source_response
+        ):
+            raise ConnectionError("source batch failed")
+        if any(path in self.source_documents for path, _ in items):
+            raise ValueError("exists=false source precondition failed")
+        self.costs.append(len(items))
+        for path, data in items:
+            self.source_documents[path] = copy.deepcopy(data)
+            identity = path.split("/")[1]
+            self.sources.setdefault(identity, []).append(
+                {k: data[k] for k in ["sourceUrl", "discoveredAt", "sourcePublishedAt"]}
+            )
+        if self.fail_source_batch == self.source_batches and self.lost_source_response:
+            raise TimeoutError("source commit reply lost")
 
     def count(self, season, published=False):
         if self.fail_read == "quota":
@@ -80,6 +114,10 @@ class QuickMemoryStore:
             self.records[row["id"]] = copy.deepcopy(row)
             self.sources[row["id"]] = copy.deepcopy(sources)
             self.audits[row["id"]] = [dict(revision=1, status="published")]
+            for evidence in sources:
+                self.source_documents[source_path(row["id"], evidence)] = source_record(
+                    evidence, batch_id, actor, input_hash, row["createdAt"]
+                )
         if self.fail_batch == self.batches and self.lost_response:
             raise TimeoutError("commit accepted, reply lost")
 
@@ -168,7 +206,86 @@ class IncrementalTests(unittest.TestCase):
         for identity, old in before[0].items():
             self.assertEqual(self.store.records[identity], old)
         for identity, old in before[1].items():
-            self.assertEqual(self.store.sources[identity], old)
+            self.assertEqual(self.store.sources[identity][:-1], old)
+            self.assertEqual(len(self.store.sources[identity]), len(old) + 1)
+
+    def test_source_only_append_preserves_parent_audit_and_snapshot_and_replays(self):
+        self.store.audits[self.base["id"]] = [dict(originalAudit=True)]
+        prepared = self.plan(self.csv([self.base["code"], self.base["code"]]))
+        self.assertEqual(prepared[1]["new"], 0)
+        self.assertEqual(prepared[1]["additionalSourceRecords"], 1)
+        self.assertEqual(prepared[1]["estimatedOperations"]["writes"], 1)
+        result, _ = self.apply(prepared)
+        self.assertEqual(result["status"], "sources-updated")
+        self.assertEqual(result["confirmedSourceCreates"], 1)
+        self.assertEqual(self.store.records[self.base["id"]], self.base)
+        self.assertEqual(self.store.audits[self.base["id"]], [dict(originalAudit=True)])
+        self.assertEqual(self.store.snapshot_queries, 0)
+        self.assertEqual(
+            (self.root / "public/data/manifest.json").read_bytes(),
+            self.original_manifest,
+        )
+        replay = self.plan(self.root / "input.csv")
+        self.assertEqual(replay[1]["additionalSourceRecords"], 0)
+        self.assertEqual(replay[1]["existingSourceRecords"], 1)
+        self.assertNotEqual(replay[1]["confirmation"], prepared[1]["confirmation"])
+        self.assertEqual(replay[1]["estimatedOperations"]["writes"], 0)
+        before = copy.deepcopy(self.store.source_documents)
+        self.apply(replay)
+        self.assertEqual(self.store.source_batches, 1)
+        self.assertEqual(self.store.source_documents, before)
+
+    def test_source_batches_partial_failure_and_lost_response_replay(self):
+        path = self.root / "input.csv"
+        path.write_text(
+            "code,source_url,season\n"
+            + "".join(
+                f"NG-S{i:07d},https://facebook.com/post/source-{s},2026-11\n"
+                for i in range(14)
+                for s in range(20)
+            )
+        )
+        parents = [record(f"NG-S{i:07d}") for i in range(14)]
+        for parent in parents:
+            parent["status"] = "hidden"
+        for lost in [False, True]:
+            with self.subTest(lost=lost):
+                self.store = QuickMemoryStore([self.base, *parents])
+                originals = copy.deepcopy(self.store.records)
+                self.store.fail_source_batch, self.store.lost_source_response = 2, lost
+                prepared = self.plan(path)
+                self.assertEqual(prepared[1]["additionalSourceRecords"], 280)
+                with self.assertRaises((ConnectionError, TimeoutError)):
+                    self.apply(prepared)
+                stopped = json.loads(
+                    (self.root / f"run-{self.counter}/result.json").read_text()
+                )
+                self.assertEqual(stopped["confirmedSourceCreates"], 250)
+                self.assertEqual(len(stopped["uncertainSourcePaths"]), 30)
+                self.store.fail_source_batch = None
+                retry = self.plan(path)
+                self.assertEqual(retry[1]["additionalSourceRecords"], 0 if lost else 30)
+                self.apply(retry)
+                self.assertEqual(len(self.store.source_documents), 280)
+                self.assertEqual(self.store.records, originals)
+                self.assertEqual(self.store.audits, {})
+                self.assertTrue(all(cost <= 250 for cost in self.store.costs))
+                self.assertEqual(self.plan(path)[1]["estimatedOperations"]["writes"], 0)
+
+    def test_source_mismatch_and_changed_parent_fail_safely(self):
+        path = self.csv([self.base["code"]])
+        prepared = self.plan(path)
+        self.store.records[self.base["id"]]["revision"] += 1
+        with self.assertRaisesRegex(ValueError, "parent changed"):
+            self.apply(prepared)
+        self.assertEqual(self.store.source_batches, 0)
+        self.store.records[self.base["id"]] = copy.deepcopy(self.base)
+        source = prepared[0][0]["sources"][0]
+        self.store.source_documents[source_path(self.base["id"], source)] = dict(
+            source, sourceUrl="https://facebook.com/different"
+        )
+        with self.assertRaisesRegex(ValueError, "evidence mismatch"):
+            self.plan(path)
 
     def test_case_sensitive_identity_with_explicit_variant_block(self):
         upper, lower = "NG-NEW00001", "NG-new00001"
@@ -370,7 +487,7 @@ class IncrementalTests(unittest.TestCase):
     def test_checkpoint_drift_and_unexpected_total_block_snapshot(self):
         prepared = self.plan(self.csv([self.base["code"], "NG-NEW00001"]))
         self.store.records[self.base["id"]]["revision"] += 1
-        with self.assertRaisesRegex(ValueError, "Touched records"):
+        with self.assertRaisesRegex(ValueError, "Touched records|parent changed"):
             self.apply(prepared)
         self.assertEqual(self.store.snapshot_queries, 0)
 
@@ -410,7 +527,7 @@ class IncrementalTests(unittest.TestCase):
 
         result, output = self.apply(self.plan(self.csv(["NG-NEW00001"])))
         plan = json.loads((output / "checkpoint.json").read_text())
-        plan.update(season=SEASON, new=1, existing=0)
+        plan.update(season=SEASON, new=1, existing=0, additionalSourceRecords=0)
         calls = []
 
         def fake_git(root, *args):

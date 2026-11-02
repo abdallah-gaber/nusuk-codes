@@ -20,5 +20,7 @@
     "requiredWriteHeadroom": 1800
   },
   "blocked": false,
-  "confirmation": "UPDATE 2026-11 <use actual fresh dry-run planId>"
+  "confirmation": "UPDATE 2026-11 <use actual fresh dry-run planId>",
+  "additionalSourceRecords": 0,
+  "existingSourceRecords": 0
 }

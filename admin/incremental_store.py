@@ -53,6 +53,31 @@ class IncrementalStore:
                     matches[doc.id] = dict(doc.to_dict(), id=doc.id)
         return sorted(matches.values(), key=lambda r: r["id"]), reads
 
+    def get_sources(self, paths):
+        records = {}
+        for group in chunks(sorted(set(paths)), 100):
+            refs = [self.client.document(path) for path in group]
+            docs = list(self.client.get_all(refs, retry=None, timeout=30))
+            if {doc.reference.path for doc in docs} != set(group):
+                raise UpdateStopped("Incomplete targeted source lookup")
+            records.update(
+                {
+                    doc.reference.path: doc.to_dict() if doc.exists else None
+                    for doc in docs
+                }
+            )
+        return records
+
+    def create_sources(self, items):
+        if not 1 <= len(items) <= 250:
+            raise UpdateStopped("Source batch exceeds 250 operations")
+        batch = self.client.batch()
+        for path, data in items:
+            # Only create source subdocuments. No update/set on the parent or
+            # any existing evidence; an exists=false conflict aborts the batch.
+            batch.create(self.client.document(path), data)
+        batch.commit(retry=None, timeout=30)
+
     def count(self, season, published=False):
         from google.cloud.firestore_v1.base_query import FieldFilter
 
