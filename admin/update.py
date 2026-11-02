@@ -143,7 +143,7 @@ def run(args, root=ROOT, factory=connect, input_fn=input):
         config.get("projectId") != "nusuk-codes"
         or config.get("season") != SEASON
         or type(config.get("maxExportRecords")) is not int
-        or not 1 <= config["maxExportRecords"] <= 5000
+        or not 1 <= config["maxExportRecords"] <= 10000
     ):
         raise UpdateStopped("Invalid quick-import configuration")
     production = (
@@ -213,7 +213,15 @@ def run(args, root=ROOT, factory=connect, input_fn=input):
         if quota:
             check_headroom(plan, quota_attestation(args.quota_headroom))
         result = execute_update(
-            store, candidates, plan, old, root, output, args.actor, now()
+            store,
+            candidates,
+            plan,
+            old,
+            root,
+            output,
+            args.actor,
+            now(),
+            capacity=config["maxExportRecords"],
         )
         if production and not args.prepare_only and result.get("promotion"):
             from .release import create_pr

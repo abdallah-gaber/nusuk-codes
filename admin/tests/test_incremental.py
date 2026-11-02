@@ -156,7 +156,15 @@ class IncrementalTests(unittest.TestCase):
         out.mkdir()
         candidates, plan, old = prepared
         result = execute_update(
-            self.store, candidates, plan, old, self.root, out, "owner", DATE
+            self.store,
+            candidates,
+            plan,
+            old,
+            self.root,
+            out,
+            "owner",
+            DATE,
+            capacity=5000,
         )
         return result, out
 
@@ -191,6 +199,192 @@ class IncrementalTests(unittest.TestCase):
         self.assertFalse(new["sourceReviewed"])
         self.assertEqual(new["status"], "published")
         self.assertEqual(new["reviewPlanId"], prepared[1]["planId"])
+
+    def test_6000_record_publication_uses_validated_capacity_and_is_additive(self):
+        baseline = [self.base] + [record(f"NG-C{i:07d}") for i in range(5998)]
+        original_records = {r["id"]: copy.deepcopy(r) for r in baseline}
+        for capacity in [6000, 10000]:
+            with self.subTest(capacity=capacity):
+                root = self.root / f"capacity-{capacity}"
+                (root / "admin").mkdir(parents=True)
+                save(
+                    root / "admin/config.json",
+                    dict(
+                        projectId="nusuk-codes",
+                        season=SEASON,
+                        updatesEnabled=False,
+                        quickImportEnabled=True,
+                        maxImportCodes=250,
+                        maxExportRecords=capacity,
+                    ),
+                )
+                stage(baseline, root / "public/data")
+                before_manifest, _, before = read_pair(root / "public/data")
+                before_entries = {e["code"]: e for e in before["codes"]}
+                source = root / "incoming.csv"
+                source.write_text(
+                    "code,source_url,season\nNG-CAP06000,https://facebook.com/post/capacity,2026-11\n"
+                )
+                store = QuickMemoryStore(baseline)
+                args = parser().parse_args(
+                    [
+                        "--file",
+                        str(source),
+                        "--dry-run",
+                        "--observed-at",
+                        DATE,
+                        "--actor",
+                        "capacity-test",
+                        "--prepare-only",
+                    ]
+                )
+                with (
+                    patch("admin.update.IncrementalStore", return_value=store),
+                    redirect_stdout(io.StringIO()),
+                    patch.object(
+                        store, "published", wraps=store.published
+                    ) as published,
+                ):
+                    self.assertEqual(run(args, root, factory=lambda *a: None), 0)
+                    paths = sorted(
+                        (root / ".admin-work/quick-import").glob(
+                            "*/attempt-*/plan.json"
+                        )
+                    )
+                    plan = json.loads(paths[-1].read_text())
+                    self.assertFalse(plan["blocked"])
+                    self.assertEqual(plan["expectedPublishedCount"], 6000)
+                    args.apply, args.dry_run, args.confirm = (
+                        True,
+                        False,
+                        plan["confirmation"],
+                    )
+                    self.assertEqual(run(args, root, factory=lambda *a: None), 0)
+                    published.assert_called_once_with(SEASON, capacity)
+                manifest, _, after = read_pair(root / "public/data")
+                self.assertEqual(manifest["codeCount"], 6000)
+                entries = {e["code"]: e for e in after["codes"]}
+                self.assertEqual(len(entries), 6000)
+                self.assertEqual(
+                    {c: entries[c] for c in before_entries}, before_entries
+                )
+                self.assertEqual(set(entries) - set(before_entries), {"NG-CAP06000"})
+                self.assertEqual(
+                    {i: store.records[i] for i in original_records}, original_records
+                )
+                self.assertTrue(
+                    all(
+                        e["status"] == "community_submitted_unverified"
+                        for e in entries.values()
+                    )
+                )
+                archives = list((root / "snapshots/history").glob("*.manifest.json"))
+                self.assertEqual(len(archives), 1)
+                self.assertEqual(json.loads(archives[0].read_text()), before_manifest)
+                self.assertTrue(
+                    (
+                        root / "public" / before_manifest["snapshotUrl"].lstrip("/")
+                    ).exists()
+                )
+
+    def test_configured_capacity_blocks_excess_before_writes(self):
+        self.store = QuickMemoryStore([record(f"NG-C{i:07d}") for i in range(6000)])
+        path = self.csv(["NG-CAP06001"])
+        candidates, report = read_csv(path, SEASON, DATE)
+        plan, old = plan_update(
+            self.store, candidates, report, self.manifest, DATE, 6000
+        )
+        self.assertTrue(plan["blocked"])
+        self.assertEqual(plan["expectedFinalCount"], 6001)
+        with self.assertRaisesRegex(ValueError, "capacity"):
+            execute_update(
+                self.store,
+                candidates,
+                plan,
+                old,
+                self.root,
+                self.root / "rejected",
+                "test",
+                DATE,
+                capacity=6000,
+            )
+        self.assertEqual(self.store.batches, 0)
+        self.assertEqual(self.store.snapshot_queries, 0)
+        self.assertEqual(
+            (self.root / "public/data/manifest.json").read_bytes(),
+            self.original_manifest,
+        )
+
+    def test_configuration_above_10000_is_rejected_before_connect(self):
+        (self.root / "admin").mkdir()
+        for capacity in [10001, 0, True]:
+            save(
+                self.root / "admin/config.json",
+                dict(
+                    projectId="nusuk-codes",
+                    season=SEASON,
+                    updatesEnabled=False,
+                    maxExportRecords=capacity,
+                ),
+            )
+            args = parser().parse_args(
+                ["--file", str(self.root / "unused.csv"), "--dry-run"]
+            )
+            factory = Mock()
+            with self.assertRaisesRegex(ValueError, "configuration"):
+                run(args, self.root, factory=factory)
+            factory.assert_not_called()
+
+    def test_capacity_increase_keeps_2000_incoming_limit(self):
+        (self.root / "admin").mkdir()
+        save(
+            self.root / "admin/config.json",
+            dict(
+                projectId="nusuk-codes",
+                season=SEASON,
+                updatesEnabled=False,
+                maxExportRecords=10000,
+            ),
+        )
+        source = self.csv([f"NG-N{i:07d}" for i in range(2001)])
+        args = parser().parse_args(
+            ["--file", str(source), "--dry-run", "--observed-at", DATE]
+        )
+        factory = Mock()
+        with self.assertRaisesRegex(ValueError, "2000 distinct"):
+            run(args, self.root, factory=factory)
+        factory.assert_not_called()
+
+    def test_existing_admin_cli_accepts_10000_record_export_limit(self):
+        from admin.cli import parser as legacy_parser, run as legacy_run
+
+        config = self.root / "config.json"
+        save(
+            config,
+            dict(
+                projectId="nusuk-codes",
+                season=SEASON,
+                updatesEnabled=False,
+                maxImportCodes=250,
+                maxExportRecords=10000,
+            ),
+        )
+        store = Mock()
+        store.list.return_value = []
+        args = legacy_parser().parse_args(
+            [
+                "export",
+                "--config",
+                str(config),
+                "--output",
+                str(self.root / "export.json"),
+            ]
+        )
+        with patch("admin.cli.connect", return_value=store):
+            result, failed = legacy_run(args)
+        self.assertFalse(failed)
+        self.assertEqual(result["exported"], 0)
+        store.list.assert_called_once_with(SEASON, 10000, published=False)
 
     def test_hidden_invalid_and_pending_records_untouched(self):
         codes = ["NG-HIDE0001", "NG-BAD00001", "NG-WAIT0001"]
