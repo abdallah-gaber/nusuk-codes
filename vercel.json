@@ -1,9 +1,4 @@
 {
-  "git": {
-    "deploymentEnabled": {
-      "feat/quick-import": false
-    }
-  },
   "headers": [
     {
       "source": "/data/manifest.json",
