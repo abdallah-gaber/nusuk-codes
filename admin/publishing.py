@@ -84,7 +84,11 @@ def checked_pair(manifest, raw):
             or not re.fullmatch(r"NG-[A-Za-z0-9]{8}", entry["code"])
             or entry["code"] in seen
             or entry["status"] != VERIFICATION
-            or entry["source"] not in {"facebook.com", "services.nusuk.sa"}
+            or entry["source"] not in {
+    "facebook.com",
+    "services.nusuk.sa",
+    "script.google.com",
+}
             or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", entry["observedAt"])
         ):
             raise ValueError("Invalid, duplicate or private public entry")
