@@ -12,6 +12,9 @@ STATUSES = {"pending", "published", "hidden", "invalid"}
 VERIFICATION = "community_submitted_unverified"
 SEASON = "2026-11"
 COMMUNITY_POLICY = "community-current-season-v1"
+MAX_PUBLICATION_RECORDS = 15_000
+HISHAM_SOURCE_HOST = "hisham-nusuk.hisham-nusuk.workers.dev"
+HISHAM_SOURCE_URL = f"https://{HISHAM_SOURCE_HOST}/codes.json"
 MAX_ROWS = 10000
 MAX_BYTES = 5_000_000
 
@@ -50,11 +53,13 @@ def safe_source(value):
     if (
         url.scheme != "https"
         or url.hostname not in {
-    "www.facebook.com",
-    "facebook.com",
-    "services.nusuk.sa",
-    "script.google.com",
-}
+            "www.facebook.com",
+            "facebook.com",
+            "services.nusuk.sa",
+            "script.google.com",
+            HISHAM_SOURCE_HOST,
+        }
+        or (url.hostname == HISHAM_SOURCE_HOST and value != HISHAM_SOURCE_URL)
         or url.username
         or url.password
         or url.port not in (None, 443)

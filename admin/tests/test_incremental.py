@@ -200,10 +200,10 @@ class IncrementalTests(unittest.TestCase):
         self.assertEqual(new["status"], "published")
         self.assertEqual(new["reviewPlanId"], prepared[1]["planId"])
 
-    def test_6000_record_publication_uses_validated_capacity_and_is_additive(self):
-        baseline = [self.base] + [record(f"NG-C{i:07d}") for i in range(5998)]
+    def test_11775_record_publication_uses_validated_capacity_and_is_additive(self):
+        baseline = [self.base] + [record(f"NG-C{i:07d}") for i in range(11773)]
         original_records = {r["id"]: copy.deepcopy(r) for r in baseline}
-        for capacity in [6000, 10000]:
+        for capacity in [11775, 15000]:
             with self.subTest(capacity=capacity):
                 root = self.root / f"capacity-{capacity}"
                 (root / "admin").mkdir(parents=True)
@@ -223,7 +223,7 @@ class IncrementalTests(unittest.TestCase):
                 before_entries = {e["code"]: e for e in before["codes"]}
                 source = root / "incoming.csv"
                 source.write_text(
-                    "code,source_url,season\nNG-CAP06000,https://facebook.com/post/capacity,2026-11\n"
+                    "code,source_url,season\nNG-CAP11775,https://hisham-nusuk.hisham-nusuk.workers.dev/codes.json,2026-11\n"
                 )
                 store = QuickMemoryStore(baseline)
                 args = parser().parse_args(
@@ -253,7 +253,7 @@ class IncrementalTests(unittest.TestCase):
                     )
                     plan = json.loads(paths[-1].read_text())
                     self.assertFalse(plan["blocked"])
-                    self.assertEqual(plan["expectedPublishedCount"], 6000)
+                    self.assertEqual(plan["expectedPublishedCount"], 11775)
                     args.apply, args.dry_run, args.confirm = (
                         True,
                         False,
@@ -262,13 +262,17 @@ class IncrementalTests(unittest.TestCase):
                     self.assertEqual(run(args, root, factory=lambda *a: None), 0)
                     published.assert_called_once_with(SEASON, capacity)
                 manifest, _, after = read_pair(root / "public/data")
-                self.assertEqual(manifest["codeCount"], 6000)
+                self.assertEqual(manifest["codeCount"], 11775)
                 entries = {e["code"]: e for e in after["codes"]}
-                self.assertEqual(len(entries), 6000)
+                self.assertEqual(len(entries), 11775)
                 self.assertEqual(
                     {c: entries[c] for c in before_entries}, before_entries
                 )
-                self.assertEqual(set(entries) - set(before_entries), {"NG-CAP06000"})
+                self.assertEqual(set(entries) - set(before_entries), {"NG-CAP11775"})
+                self.assertEqual(
+                    entries["NG-CAP11775"]["source"],
+                    "hisham-nusuk.hisham-nusuk.workers.dev",
+                )
                 self.assertEqual(
                     {i: store.records[i] for i in original_records}, original_records
                 )
@@ -315,9 +319,9 @@ class IncrementalTests(unittest.TestCase):
             self.original_manifest,
         )
 
-    def test_configuration_above_10000_is_rejected_before_connect(self):
+    def test_configuration_above_15000_is_rejected_before_connect(self):
         (self.root / "admin").mkdir()
-        for capacity in [10001, 0, True]:
+        for capacity in [15001, 0, True]:
             save(
                 self.root / "admin/config.json",
                 dict(
@@ -343,7 +347,7 @@ class IncrementalTests(unittest.TestCase):
                 projectId="nusuk-codes",
                 season=SEASON,
                 updatesEnabled=False,
-                maxExportRecords=10000,
+                maxExportRecords=15000,
             ),
         )
         source = self.csv([f"NG-N{i:07d}" for i in range(2001)])
@@ -355,7 +359,7 @@ class IncrementalTests(unittest.TestCase):
             run(args, self.root, factory=factory)
         factory.assert_not_called()
 
-    def test_existing_admin_cli_accepts_10000_record_export_limit(self):
+    def test_existing_admin_cli_accepts_15000_record_export_limit(self):
         from admin.cli import parser as legacy_parser, run as legacy_run
 
         config = self.root / "config.json"
@@ -366,7 +370,7 @@ class IncrementalTests(unittest.TestCase):
                 season=SEASON,
                 updatesEnabled=False,
                 maxImportCodes=250,
-                maxExportRecords=10000,
+                maxExportRecords=15000,
             ),
         )
         store = Mock()
@@ -384,7 +388,7 @@ class IncrementalTests(unittest.TestCase):
             result, failed = legacy_run(args)
         self.assertFalse(failed)
         self.assertEqual(result["exported"], 0)
-        store.list.assert_called_once_with(SEASON, 10000, published=False)
+        store.list.assert_called_once_with(SEASON, 15000, published=False)
 
     def test_hidden_invalid_and_pending_records_untouched(self):
         codes = ["NG-HIDE0001", "NG-BAD00001", "NG-WAIT0001"]

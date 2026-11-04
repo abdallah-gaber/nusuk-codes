@@ -17,7 +17,7 @@ from .incremental import (
     summarize,
 )
 from .incremental_store import IncrementalStore
-from .model import MAX_BYTES, SEASON, digest, read_csv, timestamp
+from .model import MAX_BYTES, MAX_PUBLICATION_RECORDS, SEASON, digest, read_csv, timestamp
 from .publishing import atomic_write, read_pair
 from .store import connect, now
 
@@ -143,7 +143,7 @@ def run(args, root=ROOT, factory=connect, input_fn=input):
         config.get("projectId") != "nusuk-codes"
         or config.get("season") != SEASON
         or type(config.get("maxExportRecords")) is not int
-        or not 1 <= config["maxExportRecords"] <= 10000
+        or not 1 <= config["maxExportRecords"] <= MAX_PUBLICATION_RECORDS
     ):
         raise UpdateStopped("Invalid quick-import configuration")
     production = (

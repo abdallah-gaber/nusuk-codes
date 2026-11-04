@@ -5,6 +5,7 @@ from collections import Counter
 
 from .model import (
     COMMUNITY_POLICY,
+    MAX_PUBLICATION_RECORDS,
     SEASON,
     VERIFICATION,
     canonical,
@@ -255,7 +256,7 @@ def write_groups(items):
 def execute_update(
     store, candidates, plan, old, root, output, actor, applied_at, *, capacity
 ):
-    if type(capacity) is not int or not 1 <= capacity <= 10000:
+    if type(capacity) is not int or not 1 <= capacity <= MAX_PUBLICATION_RECORDS:
         raise UpdateStopped("Invalid publication capacity")
     if (
         plan["expectedFinalCount"] > capacity

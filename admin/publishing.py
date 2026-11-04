@@ -11,6 +11,8 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from .model import (
+    HISHAM_SOURCE_HOST,
+    MAX_PUBLICATION_RECORDS,
     SEASON,
     VERIFICATION,
     canonical,
@@ -46,7 +48,7 @@ def checked_pair(manifest, raw):
         type(manifest.get("schemaVersion")) is not int
         or manifest.get("schemaVersion") != 1
         or type(manifest.get("codeCount")) is not int
-        or not 0 <= manifest["codeCount"] <= 20000
+        or not 0 <= manifest["codeCount"] <= MAX_PUBLICATION_RECORDS
         or type(manifest.get("maintenance")) is not bool
         or manifest.get("season") != PUBLIC_SEASON
         or not re.fullmatch(
@@ -75,7 +77,7 @@ def checked_pair(manifest, raw):
         or not isinstance(codes, list)
     ):
         raise ValueError("Invalid snapshot schema/season")
-    if len(codes) != manifest["codeCount"] or len(codes) > 20000:
+    if len(codes) != manifest["codeCount"] or len(codes) > MAX_PUBLICATION_RECORDS:
         raise ValueError("Snapshot count mismatch/limit")
     seen = set()
     for entry in codes:
@@ -85,10 +87,11 @@ def checked_pair(manifest, raw):
             or entry["code"] in seen
             or entry["status"] != VERIFICATION
             or entry["source"] not in {
-    "facebook.com",
-    "services.nusuk.sa",
-    "script.google.com",
-}
+                "facebook.com",
+                "services.nusuk.sa",
+                "script.google.com",
+                HISHAM_SOURCE_HOST,
+            }
             or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", entry["observedAt"])
         ):
             raise ValueError("Invalid, duplicate or private public entry")
