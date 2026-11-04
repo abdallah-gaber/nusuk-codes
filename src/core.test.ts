@@ -42,6 +42,10 @@ describe("candidate snapshot integrity", () => {
       }),
     ).toThrow();
   });
+  it("caps manifest counts at 15,000", () => {
+    expect(() => validateManifest({ ...manifest, codeCount: 15_000 })).not.toThrow();
+    expect(() => validateManifest({ ...manifest, codeCount: 15_001 })).toThrow();
+  });
   it("uses an allowlisted official URL and preserves case", () =>
     expect(officialUrl("NG-dX626jFL")).toBe(
       "https://services.nusuk.sa/app?p=27&id=NG-dX626jFL",
@@ -153,7 +157,7 @@ describe("administrative snapshot compatibility", () => {
       const output = join(folder, "stage");
       execFileSync("python3", [
         "-c",
-        "from pathlib import Path; import sys; from admin.publishing import stage; from admin.tests.test_pipeline import record; r=record(); r['discoveredAt']='2026-11-04T00:00:00Z'; stage([r],Path(sys.argv[1]))",
+        "from pathlib import Path; import sys; from admin.publishing import stage; from admin.tests.test_pipeline import record; r=record(); r['discoveredAt']='2026-11-04T00:00:00Z'; r['sourceUrl']='https://hisham-nusuk.hisham-nusuk.workers.dev/codes.json'; stage([r],Path(sys.argv[1]))",
         output,
       ]);
       const published = JSON.parse(
@@ -166,6 +170,7 @@ describe("administrative snapshot compatibility", () => {
           "utf8",
         ),
       );
+      expect(entries[0].source).toBe("hisham-nusuk.hisham-nusuk.workers.dev");
       expect(entries[0].observedAt).toBe("2026-11-04");
       expect(entries[0].status).toBe("community_submitted_unverified");
     } finally {

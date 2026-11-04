@@ -4,5 +4,5 @@
   "updatesEnabled": false,
   "quickImportEnabled": false,
   "maxImportCodes": 250,
-  "maxExportRecords": 10000
+  "maxExportRecords": 15000
 }

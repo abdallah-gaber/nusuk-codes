@@ -6,7 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from admin.cli import apply_import, parser, plan_import, reconcile, review_plan, run
-from admin.model import SEASON, VERIFICATION, canonical, code_id, read_csv
+from admin.model import SEASON, VERIFICATION, canonical, code_id, read_csv, safe_source
 from admin.publishing import (
     atomic_write,
     checked_pair,
@@ -100,6 +100,22 @@ class PipelineTests(unittest.TestCase):
         )
         self.assertEqual((report["unique"], report["duplicates"]), (1, 1))
         self.assertEqual(len(entries[0]["sources"]), 2)
+
+    def test_hisham_source_allows_only_the_exact_public_endpoint(self):
+        host = "hisham-nusuk.hisham-nusuk.workers.dev"
+        url = f"https://{host}/codes.json"
+        self.assertEqual(safe_source(url), url)
+        for invalid in (
+            f"http://{host}/codes.json",
+            f"https://{host}/admin",
+            f"{url}?token=secret",
+            f"{url}#fragment",
+            f"https://{host}.example.org/codes.json",
+            f"https://user@{host}/codes.json",
+            "https://another.workers.dev/codes.json",
+        ):
+            with self.subTest(url=invalid), self.assertRaises(ValueError):
+                safe_source(invalid)
 
     def test_invalid_formula_host_season_and_missing_columns(self):
         _, report = self.csv(

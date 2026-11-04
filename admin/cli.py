@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from .model import (
+    MAX_PUBLICATION_RECORDS,
     SEASON,
     STATUSES,
     canonical,
@@ -193,7 +194,7 @@ def run(args):
         or type(config.get("maxImportCodes")) is not int
         or not 1 <= config["maxImportCodes"] <= 250
         or type(config.get("maxExportRecords")) is not int
-        or not 1 <= config["maxExportRecords"] <= 20000
+        or not 1 <= config["maxExportRecords"] <= MAX_PUBLICATION_RECORDS
     ):
         raise ValueError("Invalid administrative config; fail closed")
     if args.season != SEASON or config["season"] != SEASON:
@@ -315,7 +316,7 @@ def run(args):
         )
         return report, bool(report["failed"])
     limit = args.limit if args.limit is not None else config["maxExportRecords"]
-    if not 1 <= limit <= min(config["maxExportRecords"], 20000):
+    if not 1 <= limit <= config["maxExportRecords"]:
         raise ValueError("Record limit exceeds configured cap")
     if command == "snapshot" and args.production and not config["updatesEnabled"]:
         raise ValueError("Snapshot updates disabled")

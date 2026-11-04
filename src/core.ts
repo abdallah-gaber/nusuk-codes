@@ -84,7 +84,7 @@ export function validateManifest(m: Manifest) {
     !/^[a-f0-9]{64}$/.test(m.snapshotSha256) ||
     !Number.isInteger(m.codeCount) ||
     m.codeCount < 0 ||
-    m.codeCount > 20000 ||
+    m.codeCount > 15_000 ||
     !Number.isFinite(Date.parse(m.generatedAt)) ||
     typeof m.readOnly !== "boolean" ||
     m.candidatePreview !== true
@@ -121,6 +121,7 @@ export async function verifySnapshot(
           "facebook.com",
           "services.nusuk.sa",
           "script.google.com",
+          "hisham-nusuk.hisham-nusuk.workers.dev",
         ].includes(c.source) &&
         /^\d{4}-\d{2}-\d{2}$/.test(c.observedAt) &&
         Number.isFinite(Date.parse(`${c.observedAt}T00:00:00Z`)) &&
