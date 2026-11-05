@@ -1023,3 +1023,84 @@ dialog .main-actions {
     font-size: 10px;
   }
 }
+
+.app-intro,
+.creator-support {
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 18px 20px;
+  background: var(--card);
+}
+.app-intro {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 18px;
+}
+.app-intro h2,
+.creator-support h2 {
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+.app-intro p,
+.creator-support p {
+  font-size: 12px;
+  color: var(--muted);
+}
+.app-intro > a {
+  flex: 0 0 auto;
+  font-size: 12px;
+}
+.creator-support {
+  background: var(--pale);
+  margin-bottom: 32px;
+}
+.creator-code {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 16px 0 12px;
+}
+.creator-code span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.creator-code code {
+  font: 20px ui-monospace, SFMono-Regular, Consolas, monospace;
+  color: var(--ink);
+}
+.support-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+.support-actions button,
+.support-actions a {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  font-size: 12px;
+}
+.support-actions a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.creator-support .support-disclaimer {
+  font-size: 11px;
+  margin-top: 12px;
+}
+@media (max-width: 600px) {
+  .app-intro {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  .creator-support {
+    padding: 18px 16px;
+  }
+}

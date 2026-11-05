@@ -19,6 +19,7 @@ import {
 import "./style.css";
 import { TipsTicker } from "./TipsTicker";
 import { CodeList } from "./CodeList";
+import { OfficialAppIntro, CreatorSupport } from "./CommunityLinks";
 import { getProgress } from "./discovery";
 import { formatDate, formatSeason } from "./presentation";
 
@@ -242,6 +243,7 @@ function App() {
           <span>مساحة مجتمعية مستقلة</span>
           <span>{feed ? formatSeason(feed.manifest.season) : loading ? "جارٍ تحميل بيانات الموسم…" : "بيانات الموسم غير متاحة"}</span>
         </div>
+        <OfficialAppIntro />
         <TipsTicker />
         {(!online || feed?.cached || stale || storageWarning) && (
           <div className="banner" role="status">
@@ -556,6 +558,7 @@ function App() {
           </a>
           <button onClick={() => void share()}>شارك الموقع مع أصحابك ↗</button>
         </section>
+        <CreatorSupport onCopy={(code) => void copy(code, "تم نسخ كود دعوة صاحب الموقع. استخدامه اختياري.")} />
       </main>
       <footer>
         <a className="brand" href="#">
