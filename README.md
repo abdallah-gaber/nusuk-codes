@@ -24,9 +24,7 @@ Copy a code, open the official Nusuk app, paste it into the code field and follo
 - Arabic-first RTL layout, responsive screens and light/dark themes.
 - Official Nusuk sharing links. These may open without navigating or filling the code, so manual copy/paste is the recommended flow.
 
-![Arabic desktop interface showing the code browser and personal progress](docs/qa/search-progress-desktop.jpg)
-
-Existing interface screenshot from November 2026. Its displayed count predates the current dataset.
+![Production Arabic interface showing 11,775 codes, the code browser, personal progress and local search](docs/qa/readme-production-desktop.jpg)
 
 ## Current season
 
