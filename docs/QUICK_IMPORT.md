@@ -1,6 +1,6 @@
 # Quick incremental import and publication
 
-Implemented locally; production activation, imports and deployment have **not** been performed by this change. The current 1,540-code release is untouched. This workflow is for the existing `2026-11` season and owner policy `community-current-season-v1`.
+Routine imports and publication require explicit owner approval. Consult [the checked-in manifest](../public/data/manifest.json) for the current release. This workflow is for the existing `2026-11` season and owner policy `community-current-season-v1`.
 
 ## Routine commands
 
