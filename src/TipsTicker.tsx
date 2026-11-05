@@ -1,29 +1,32 @@
 import { useEffect, useState } from "react";
+import { useLocale } from "./LocaleProvider";
 
-const tips = [
-  [
-    "النسخ واللصق أوثق",
-    "أفضل طريقة: انسخ الكود والصقه يدويًا في خانة الرمز داخل نسك.",
-  ],
-  [
-    "العداد ممكن يتأخر",
-    "لو المفتاح ما ظهرش فورًا، اقفل تطبيق نسك وافتحه تاني، أو ارجع لشاشة المفاتيح.",
-  ],
-  [
-    "الرابط مش مضمون",
-    "الفتح المباشر ممكن ما يفتحش الشاشة المطلوبة أو يملأ الكود تلقائيًا.",
-  ],
-  [
-    "من غير تكرار",
-    "التصفح الرئيسي بيعدّي الأكواد اللي شفتها على نفس المتصفح؛ تقدر تراجعها بالبحث. مسح البيانات أو تغيير الجهاز بيبدأ سجل جديد.",
-  ],
-  [
-    "من المجتمع، غير متحقق منها",
-    "صلاحية أكواد المجتمع مش مؤكدة، ومفيش ضمان للتفعيل أو الأهلية.",
-  ],
-];
+
 
 export function TipsTicker() {
+  const { t, n, dir } = useLocale();
+  const tips = [
+    [
+      t("tip1Title"),
+      t("tip1Body"),
+    ],
+    [
+      t("tip2Title"),
+      t("tip2Body"),
+    ],
+    [
+      t("tip3Title"),
+      t("tip3Body"),
+    ],
+    [
+      t("tip4Title"),
+      t("tip4Body"),
+    ],
+    [
+      t("tip5Title"),
+      t("tip5Body"),
+    ],
+  ];
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -51,7 +54,7 @@ export function TipsTicker() {
       8000,
     );
     return () => window.clearInterval(timer);
-  }, [rotating]);
+  }, [rotating, tips.length]);
   function move(delta: number) {
     setPaused(true);
     setIndex((i) => (i + delta + tips.length) % tips.length);
@@ -59,8 +62,8 @@ export function TipsTicker() {
   return (
     <section
       className="tips-ticker"
-      aria-label="نصائح استخدام الأكواد"
-      aria-roledescription="عرض شرائح"
+      aria-label={t("tipsLabel")}
+      aria-roledescription={t("carousel")}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onFocusCapture={() => setFocused(true)}
@@ -71,7 +74,7 @@ export function TipsTicker() {
       onKeyDown={(event) => {
         if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
           event.preventDefault();
-          move(event.key === "ArrowLeft" ? 1 : -1);
+          move((event.key === "ArrowLeft") === (dir === "rtl") ? 1 : -1);
         }
       }}
     >
@@ -81,32 +84,31 @@ export function TipsTicker() {
         aria-atomic="true"
       >
         <span className="ticker-label">
-          نصيحة سريعة · {(index + 1).toLocaleString("ar-EG")} من{" "}
-          {tips.length.toLocaleString("ar-EG")}
+          {t("tipPosition", { current: n(index + 1), total: n(tips.length) })}
         </span>
         <p>
           <strong>{tips[index][0]}.</strong> {tips[index][1]}
         </p>
       </div>
       <div className="ticker-controls">
-        <button aria-label="النصيحة السابقة" onClick={() => move(-1)}>
-          →
+        <button aria-label={t("previousTip")} onClick={() => move(-1)}>
+          {dir === "rtl" ? "→" : "←"}
         </button>
         <button
-          aria-label={paused ? "تشغيل تبديل النصائح" : "إيقاف تبديل النصائح"}
+          aria-label={paused ? t("playTips") : t("pauseTips")}
           aria-pressed={paused}
           disabled={reducedMotion}
           title={
             reducedMotion
-              ? "التبديل التلقائي متوقف لتفضيل تقليل الحركة"
+              ? t("reducedMotion")
               : undefined
           }
           onClick={() => setPaused((value) => !value)}
         >
           {paused || reducedMotion ? "▷" : "Ⅱ"}
         </button>
-        <button aria-label="النصيحة التالية" onClick={() => move(1)}>
-          ←
+        <button aria-label={t("nextTip")} onClick={() => move(1)}>
+          {dir === "rtl" ? "←" : "→"}
         </button>
       </div>
     </section>

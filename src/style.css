@@ -1104,3 +1104,31 @@ dialog .main-actions {
     padding: 18px 16px;
   }
 }
+
+.language-select select {
+  min-height: 44px;
+  max-width: 170px;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+}
+.language-select select:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+@media (max-width: 760px) {
+  .header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header > .brand { flex-basis: 100%; }
+  .header nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

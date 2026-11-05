@@ -22,6 +22,8 @@ import { CodeList } from "./CodeList";
 import { OfficialAppIntro, CreatorSupport } from "./CommunityLinks";
 import { getProgress } from "./discovery";
 import { formatDate, formatSeason } from "./presentation";
+import { LocaleProvider, LanguageSelector, useLocale } from "./LocaleProvider";
+import { LocalizedError, type TranslationKey } from "./i18n";
 
 function initialHistory() {
   try {
@@ -31,13 +33,14 @@ function initialHistory() {
   }
 }
 function App() {
+  const { language, locale, dir, t, n } = useLocale();
   const [history, setHistory] = useState<History>(initialHistory);
   const [now, setNow] = useState(Date.now);
   const [feed, setFeed] = useState<Feed>();
-  const [error, setError] = useState("");
+  const [error, setError] = useState<TranslationKey | "">("");
   const [loading, setLoading] = useState(true);
   const [undo, setUndo] = useState<History>();
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState<TranslationKey | "">("");
   const [storageWarning, setStorageWarning] = useState(false);
   const [online, setOnline] = useState(navigator.onLine);
   const [theme, setTheme] = useState(() => {
@@ -62,7 +65,7 @@ function App() {
     try {
       setFeed(await loadFeed());
     } catch (e) {
-      setError((e as Error).message);
+      setError(e instanceof LocalizedError ? e.key : "loadError");
     } finally {
       setLoading(false);
     }
@@ -92,7 +95,7 @@ function App() {
         try {
           setHistory(e.newValue ? parseHistory(e.newValue) : newHistory());
           setUndo(undefined);
-          setNotice("اتحدث سجلك من نافذة تانية.");
+          setNotice("historySynced");
         } catch {
           setStorageWarning(true);
         }
@@ -129,37 +132,37 @@ function App() {
     [feed, history],
   );
   const percentage = progress.percentage > 0 && progress.percentage < 0.1
-    ? "أقل من ٠٫١٪"
-    : `${Math.min(progress.percentage, progress.remaining ? 99.9 : 100).toLocaleString("ar-EG", { maximumFractionDigits: 1 })}٪`;
+    ? t("tinyProgress")
+    : (Math.min(progress.percentage, progress.remaining ? 99.9 : 100) / 100).toLocaleString(locale, { style: "percent", maximumFractionDigits: 1 });
   function advance(action: "next" | "skipped" | "tried") {
     setUndo(history);
     const next = moveForward(history, current, order, action);
     setHistory(next.history);
     setNotice(
       action === "tried"
-        ? "اتسجلت كتجربة محلية، مش تأكيد صلاحية."
+        ? "triedNotice"
         : action === "skipped"
-          ? "تم تخطي الكود."
-          : "الكود التالي جاهز.",
+          ? "skippedNotice"
+          : "nextNotice",
     );
     requestAnimationFrame(() => codeFocus.current?.focus());
   }
-  async function copy(text: string, message: string) {
+  async function copy(text: string, message: TranslationKey) {
     try {
       await navigator.clipboard.writeText(text);
       setNotice(message);
     } catch {
-      setNotice("تعذر النسخ التلقائي. حدد النص وانسخه يدويًا.");
+      setNotice("copyFailed");
     }
   }
   async function share() {
-    const url = location.origin;
+    const url = location.origin + `/${language}/`;
     try {
-      if (navigator.share) await navigator.share({ title: "مفاتيح نسك", url });
-      else await copy(url, "تم نسخ رابط الموقع.");
+      if (navigator.share) await navigator.share({ title: t("brand"), url });
+      else await copy(url, "siteCopied");
     } catch (e) {
       if ((e as Error).name !== "AbortError")
-        setNotice("تعذرت المشاركة. انسخ رابط الموقع من المتصفح.");
+        setNotice("shareFailed");
     }
   }
   function exportHistory() {
@@ -177,7 +180,7 @@ function App() {
   async function importHistory(f?: File) {
     if (!f) return;
     try {
-      if (f.size > 2000000) throw new Error("الملف أكبر من المسموح");
+      if (f.size > 2000000) throw new LocalizedError("fileTooLarge");
       const h = parseHistory(await f.text());
       setHistory((old) => ({
         ...old,
@@ -186,9 +189,9 @@ function App() {
         skipped: [...new Set([...old.skipped, ...h.skipped])],
       }));
       setUndo(undefined);
-      setNotice("تم دمج السجل مع بياناتك الحالية.");
+      setNotice("historyImported");
     } catch (e) {
-      setNotice((e as Error).message);
+      setNotice(e instanceof LocalizedError ? e.key : "invalidHistory");
     }
     if (file.current) file.current.value = "";
   }
@@ -201,22 +204,22 @@ function App() {
   return (
     <>
       <a className="skip-link" href="#browser">
-        انتقل للأكواد
-      </a>
+        {t("skipToCodes")}</a>
       <header className="header">
         <a className="brand" href="#">
           <span className="brand-mark">✦</span>
           <div>
-            <h1 className="brand-title">مفاتيح نسك</h1>
-            <small>من المجتمع، للمجتمع</small>
+            <h1 className="brand-title">{t("brand")}</h1>
+            <small>{t("tagline")}</small>
           </div>
         </a>
-        <nav aria-label="التنقل الرئيسي">
-          <a href="#how">إزاي تستخدمه؟</a>
-          <a href="#faq">أسئلة شائعة</a>
+        <nav aria-label={t("navigation")}>
+          <a href="#how">{t("howNav")}</a>
+          <a href="#faq">{t("faqNav")}</a>
+          <LanguageSelector />
           <button
             className="icon-button"
-            aria-label="تغيير المظهر"
+            aria-label={t("changeTheme")}
             onClick={() =>
               setTheme(
                 theme === "system"
@@ -230,103 +233,96 @@ function App() {
             {theme === "dark" ? "☾" : theme === "light" ? "☀" : "◐"}
             <span className="theme-label">
               {theme === "system"
-                ? "تلقائي"
+                ? t("themeSystem")
                 : theme === "dark"
-                  ? "داكن"
-                  : "فاتح"}
+                  ? t("themeDark")
+                  : t("themeLight")}
             </span>
           </button>
         </nav>
       </header>
       <main>
         <div className="season-bar">
-          <span>مساحة مجتمعية مستقلة</span>
-          <span>{feed ? formatSeason(feed.manifest.season) : loading ? "جارٍ تحميل بيانات الموسم…" : "بيانات الموسم غير متاحة"}</span>
+          <span>{t("independent")}</span>
+          <span>{feed ? formatSeason(feed.manifest.season, language) : loading ? t("seasonLoading") : t("seasonUnavailable")}</span>
         </div>
         <OfficialAppIntro />
         <TipsTicker />
         {(!online || feed?.cached || stale || storageWarning) && (
           <div className="banner" role="status">
-            {!online ? "أنت غير متصل. " : ""}
+            {!online ? t("offline") : ""}
             {feed?.cached
-              ? "بنعرض آخر نسخة محفوظة بعد فحص سلامة الملف، وليس صلاحية الأكواد. "
+              ? t("cachedNotice")
               : ""}
             {stale
-              ? "البيانات أقدم من ٧ أيام؛ راجع شروط الموسم داخل نسك. "
+              ? t("staleNotice")
               : ""}
             {storageWarning
-              ? "التخزين غير متاح؛ تقدمك محفوظ في الجلسة الحالية فقط."
+              ? t("storageWarning")
               : ""}
           </div>
         )}
         {feed?.manifest.maintenance && (
           <div className="banner">
-            الخدمة تحت الصيانة. التصفح متاح للقراءة فقط.
-          </div>
+            {t("maintenance")}</div>
         )}
         <section
           id="browser"
           className="browse-layout"
-          aria-label="تصفح الأكواد"
+          aria-label={t("browseCodes")}
         >
           <div className="code-card">
             <div className="card-top">
               <span>
-                <span className="dot" /> أكواد المجتمع
-              </span>
-              <span className="badge">غير متحقق منها</span>
+                <span className="dot" /> {t("communityCodes")}</span>
+              <span className="badge">{t("unverified")}</span>
             </div>
             {loading ? (
               <div className="state" role="status">
                 <div className="skeleton" />
-                <p>بنجهز لك أكواد المجتمع…</p>
+                <p>{t("loadingCodes")}</p>
               </div>
             ) : error ? (
               <div className="state">
-                <h2>الاتصال محتاج محاولة تانية</h2>
-                <p>{error}</p>
+                <h2>{t("connectionTitle")}</h2>
+                <p>{error && t(error)}</p>
                 <button className="primary" onClick={() => void reload()}>
-                  إعادة المحاولة ↻
-                </button>
+                  {t("retry")}</button>
                 <a
                   href="https://services.nusuk.sa/app"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  افتح نسك الرسمي ↗
-                </a>
+                  {t("openOfficial")}</a>
               </div>
             ) : !order.length ? (
               <div className="state">
-                <h2>لا توجد أكواد مجتمعية في هذه النسخة</h2>
-                <p>راجع نسك لمعرفة شروط التحدي، أو جرّب تحميل القائمة لاحقًا.</p>
+                <h2>{t("emptyCodes")}</h2>
+                <p>{t("emptyHelp")}</p>
                 <a
                   href="https://services.nusuk.sa/app"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  فتح نسك الرسمي ↗
-                </a>
+                  {t("openOfficialAlt")}</a>
               </div>
             ) : !current ? (
               <div className="state">
                 <span className="state-symbol">✓</span>
-                <h2>شوفت كل الأكواد المتاحة</h2>
-                <p>سجلك محفوظ هنا. تقدر ترجع خطوة أو تصفّره وتبدأ من جديد.</p>
+                <h2>{t("exhaustedTitle")}</h2>
+                <p>{t("exhaustedHelp")}</p>
                 <button className="primary" onClick={() => setReset(true)}>
-                  بدء جولة جديدة
-                </button>
+                  {t("newRound")}</button>
               </div>
             ) : (
               <>
                 <div className="code-area">
-                  <p className="mini-label">مفتاح من المجتمع، جرّبه بنفسك</p>
+                  <p className="mini-label">{t("codeIntro")}</p>
                   <h2 ref={codeFocus} tabIndex={-1} dir="ltr" className="code">
                     {current}
                   </h2>
                   <span className="code-caption">
-                    الكود حساس لحالة الحروف · انسخه زي ما هو
-                  </span>
+                    {t("caseSensitive")}</span>
                 </div>
                 <div className="browse-actions">
                   <button
@@ -334,28 +330,25 @@ function App() {
                     onClick={() =>
                       void copy(
                         current,
-                        "تم نسخ الكود. الصقه في خانة الرمز داخل نسك.",
+                        "codeCopied",
                       )
                     }
                   >
-                    <span aria-hidden="true">▣</span> نسخ الكود
-                  </button>
+                    <span aria-hidden="true">▣</span> {t("copyCode")}</button>
                   <button
                     className="secondary next-code"
                     onClick={() => advance("next")}
                   >
-                    الكود التالي <span aria-hidden="true">←</span>
+                    {t("nextCode")}<span aria-hidden="true">{dir === "rtl" ? "←" : "→"}</span>
                   </button>
                   <div className="local-actions">
-                    <button onClick={() => advance("skipped")}>تخطي</button>
+                    <button onClick={() => advance("skipped")}>{t("skip")}</button>
                     <button onClick={() => advance("tried")}>
-                      جرّبت الكود ✓
-                    </button>
+                      {t("markTried")}</button>
                   </div>
                 </div>
                 <p className="manual-flow">
-                  انسخ الكود ← افتح تطبيق نسك ← الصقه في خانة الرمز ← اضغط تحقق
-                </p>
+                  {t("manualFlow")}</p>
                 <div className="official-action">
                   <a
                     href={officialUrl(current)}
@@ -363,73 +356,67 @@ function App() {
                     rel="noopener noreferrer"
                     aria-describedby="official-link-help"
                   >
-                    فتح الرابط الرسمي <span aria-hidden="true">↗</span>
+                    {t("officialLink")}<span aria-hidden="true">↗</span>
                   </a>
                   <p id="official-link-help">
-                    يفتح نسك في نافذة جديدة؛ قد لا يملأ الكود أو يفتح الشاشة
-                    المطلوبة. الأفضل اللصق يدويًا.
-                  </p>
+                    {t("officialHelp")}</p>
                 </div>
               </>
             )}
             <div className="card-bottom">
-              <span>◷ مفيش تكرار على نفس المتصفح</span>
+              <span>{t("noRepeat")}</span>
               <button
                 disabled={!undo}
                 onClick={() => {
                   if (undo) {
                     setHistory(undo);
                     setUndo(undefined);
-                    setNotice("تم التراجع عن آخر خطوة.");
+                    setNotice("undoNotice");
                   }
                 }}
               >
-                ↶ تراجع
-              </button>
+                {t("undo")}</button>
             </div>
           </div>
           <aside className="progress-card">
-            <span className="mini-label">خطوة بخطوة</span>
-            <h2>رحلتك هنا</h2>
+            <span className="mini-label">{t("stepByStep")}</span>
+            <h2>{t("yourJourney")}</h2>
             <p>
-              سجلك على جهازك بس.
-              <br />
-              المشاهدات والتجارب هنا مش تأكيد تفعيل في نسك.
-            </p>
+              {t("localHistory")}<br />
+              {t("progressDisclaimer")}</p>
             <div className="progress-summary">
-              <span>الإجمالي <b>{progress.total.toLocaleString("ar-EG")}</b> كود</span>
+              <span>{t("total")}{" "}<b>{progress.total.toLocaleString(locale)}</b> {t("codeUnit")}</span>
               <strong>{percentage}</strong>
             </div>
             <progress
-              aria-label="نسبة الأكواد التي شاهدتها"
-              aria-valuetext={`شاهدت ${progress.seen.toLocaleString("ar-EG")} من ${progress.total.toLocaleString("ar-EG")} · ${percentage}`}
+              aria-label={t("progressLabel")}
+              aria-valuetext={t("progressReadout", { seen: n(progress.seen), total: n(progress.total), percent: percentage })}
               value={progress.seen}
               max={progress.total || 1}
             />
             <div className="stats">
               <div>
-                <strong>{progress.remaining.toLocaleString("ar-EG")}</strong>
-                <span>كود متبقي</span>
+                <strong>{progress.remaining.toLocaleString(locale)}</strong>
+                <span>{t("remaining")}</span>
               </div>
               <div>
-                <strong>{progress.seen.toLocaleString("ar-EG")}</strong>
-                <span>كود شفته</span>
+                <strong>{progress.seen.toLocaleString(locale)}</strong>
+                <span>{t("seen")}</span>
               </div>
             </div>
             <div className="local-counts">
-              <span>جرّبت <b>{progress.tried.toLocaleString("ar-EG")}</b></span>
+              <span>{t("tried")}<b>{progress.tried.toLocaleString(locale)}</b></span>
               <span>
-                تخطّيت <b>{progress.skipped.toLocaleString("ar-EG")}</b>
+                {t("skipped")}<b>{progress.skipped.toLocaleString(locale)}</b>
               </span>
             </div>
             <details>
-              <summary>إدارة سجلك المحلي</summary>
+              <summary>{t("manageHistory")}</summary>
               <div className="history-actions">
-                <button onClick={exportHistory}>تصدير السجل ↓</button>
+                <button onClick={exportHistory}>{t("exportHistory")}</button>
                 <button onClick={() => file.current?.click()}>
-                  استيراد ودمج ↑
-                </button>
-                <button onClick={() => setReset(true)}>مسح السجل</button>
+                  {t("importHistory")}</button>
+                <button onClick={() => setReset(true)}>{t("resetHistory")}</button>
               </div>
             </details>
             <input
@@ -440,41 +427,39 @@ function App() {
               onChange={(e) => void importHistory(e.target.files?.[0])}
             />
             <div className="privacy-note">
-              ◇ لو مسحت بيانات المتصفح أو غيّرت الجهاز، الأكواد ممكن تظهر تاني.
-            </div>
+              {t("privacyNote")}</div>
           </aside>
         </section>
         <CodeList entries={feed?.codes || []} history={history} loading={loading} error={!!error}
-          onCopy={(code) => void copy(code, "تم نسخ الكود. النسخ من القائمة لا يغيّر سجلك.")} />
+          onCopy={(code) => void copy(code, "listCopied")} />
         <div className="freshness">
           <span>
-            ◷ {feed?.cached ? "تاريخ إنشاء النسخة المحفوظة" : "تاريخ إنشاء نسخة البيانات"}:{" "}
-            {formatDate(feed?.manifest.generatedAt)} ·{" "}
-            {feed ? feed.codes.length.toLocaleString("ar-EG") : "—"} كود مجتمعي غير متحقق منه
-          </span>
-          <a href="#sources">اعرف مصدر الأكواد ↗</a>
+            ◷ {feed?.cached ? t("cachedDate") : t("releaseDate")}:{" "}
+            {formatDate(feed?.manifest.generatedAt, language)} ·{" "}
+            {feed ? feed.codes.length.toLocaleString(locale) : "—"} {t("candidateUnit")}</span>
+          <a href="#sources">{t("sourceNav")}</a>
         </div>
         <section id="how" className="how">
           <div className="section-heading">
-            <span className="mini-label">ببساطة</span>
-            <h2>من هنا، لنسك في ٣ خطوات.</h2>
+            <span className="mini-label">{t("simply")}</span>
+            <h2>{t("howTitle")}</h2>
           </div>
           <div className="steps">
             {[
               [
                 "01",
-                "اختار مفتاحك",
-                "تصفّح الأكواد، وكل ضغطة «التالي» بتوريك كود لسه ما شفتوش.",
+                t("step1Title"),
+                t("step1Body"),
               ],
               [
                 "02",
-                "انسخ والصق يدويًا",
-                "انسخ الكود بحروفه الأصلية، وافتح نسك والصقه في خانة الرمز، ثم اضغط تحقق.",
+                t("step2Title"),
+                t("step2Body"),
               ],
               [
                 "03",
-                "كمّل داخل نسك",
-                "لو العداد ما اتحدثش فورًا، اقفل نسك وافتحه تاني أو ارجع لشاشة المفاتيح. ده مش تأكيد نجاح التفعيل.",
+                t("step3Title"),
+                t("step3Body"),
               ],
             ].map(([n, title, text]) => (
               <article key={n}>
@@ -490,55 +475,48 @@ function App() {
             ◇
           </span>
           <div>
-            <h2>شفافية من أول مفتاح.</h2>
+            <h2>{t("transparencyTitle")}</h2>
             <p>
-              الأكواد المعروضة مجمّعة من مصادر مجتمعية عامة، مع الاحتفاظ بمعلومات
-              عن مصدر وتاريخ رصد كل كود. بنراجع صيغة الأكواد والتكرار قبل نشرها،
-              لكن مش بنقدر نتحقق من قبولها أو صلاحيتها داخل تطبيق نسك.
-              وجود أي كود هنا مش ضمان لتفعيله أو لأهليته للمسابقة.
-            </p>
+              {t("transparencyBody")}</p>
             {entry && (
               <p className="source-detail">
-                مصدر رصد الكود المعروض: <bdi>{entry.source}</bdi> · تاريخ الرصد:{" "}
-                {formatDate(`${entry.observedAt}T00:00:00Z`)}
+                {t("observedSource")}{" "}<bdi dir="ltr">{entry.source}</bdi> {t("observedDate")}{" "}
+                {formatDate(`${entry.observedAt}T00:00:00Z`, language)}
               </p>
             )}
             <p className="source-detail">
-              تاريخ الرصد لا يثبت تاريخ إنشاء الكود أو نشره أو قبوله داخل نسك.
-              إضافة الأكواد والإبلاغ عنها من خلال الموقع غير متاحين حاليًا.
-              مش هنطلب منك حساب نسك أو رقم هاتفك أو كلمة المرور أو رمز OTP.
-            </p>
+              {t("sourceDisclaimer")}</p>
           </div>
         </section>
         <section id="faq" className="faq">
-          <h2>أسئلة على بالك</h2>
+          <h2>{t("faqTitle")}</h2>
           {[
             [
-              "فعّلت كود والعداد ما زادش؟",
-              "حسب تجارب مستخدمين، العداد ممكن يتأخر حتى بعد نجاح التفعيل. جرّب تقفل نسك وتفتحه تاني أو ترجع لشاشة المفاتيح. التأخير وحده مش دليل نجاح أو فشل الكود.",
+              t("faq1Question"),
+              t("faq1Answer"),
             ],
             [
-              "ليه بننصح بالنسخ اليدوي؟",
-              "حسب التجارب، الرابط المباشر ممكن يفتح التطبيق من غير ما ينقلك للشاشة المطلوبة أو يملأ الكود. النسخ واللصق في خانة الرمز ثم الضغط على تحقق هو المسار الأوثق.",
+              t("faq2Question"),
+              t("faq2Answer"),
             ],
             [
-              "هل الموقع تابع لنسك؟",
-              "لا. مفاتيح نسك مشروع مجتمعي مستقل، غير تابع لنسك أو أي جهة حكومية.",
+              t("faq3Question"),
+              t("faq3Answer"),
             ],
             [
-              "هل كل كود يضمن مفتاح أو فرصة؟",
-              "لا نضمن الصلاحية أو الأهلية أو الجوائز. راجع شروط التحدي وعدد الفرص اليومية داخل تطبيق نسك الرسمي.",
+              t("faq4Question"),
+              t("faq4Answer"),
             ],
             [
-              "هل بتسجلوا الأكواد اللي جربتها؟",
-              "السجل محلي على متصفحك، ومش بيتبعت لخادم. «جرّبت الكود» مجرد ملاحظة منك وليس تأكيد تفعيل. يمكنك تصديره ودمجه يدويًا على جهاز آخر.",
+              t("faq5Question"),
+              t("faq5Answer"),
             ],
             [
-              "الأكواد جاية منين؟",
-              "بيانات مجتمعية مرشحة غير متحقق منها. بنعرض مصدر الرصد وتاريخه، من غير أسماء المشاركين أو ملفاتهم الشخصية. أكواد المواسم السابقة لا تُنقل تلقائيًا لقائمة الموسم.",
+              t("faq6Question"),
+              t("faq6Answer"),
             ],
-          ].map(([q, a]) => (
-            <details key={q}>
+          ].map(([q, a], index) => (
+            <details key={index}>
               <summary>{q}</summary>
               <p>{a}</p>
             </details>
@@ -546,33 +524,29 @@ function App() {
         </section>
         <section className="closing">
           <span aria-hidden="true">✦</span>
-          <h2>كل الخطوات بتكمل في نسك.</h2>
-          <p>راجع الشروط والتفاصيل الأحدث في التطبيق الرسمي.</p>
+          <h2>{t("continueNusuk")}</h2>
+          <p>{t("officialTerms")}</p>
           <a
             className="primary"
             href="https://services.nusuk.sa/app"
             target="_blank"
             rel="noopener noreferrer"
           >
-            افتح نسك الرسمي ↗
-          </a>
-          <button onClick={() => void share()}>شارك الموقع مع أصحابك ↗</button>
+            {t("openOfficial")}</a>
+          <button onClick={() => void share()}>{t("shareSite")}</button>
         </section>
-        <CreatorSupport onCopy={(code) => void copy(code, "تم نسخ كود دعوة صاحب الموقع. استخدامه اختياري.")} />
+        <CreatorSupport onCopy={(code) => void copy(code, "creatorCopied")} />
       </main>
       <footer>
         <a className="brand" href="#">
-          ✦ مفاتيح نسك
-        </a>
+          {t("footerBrand")}</a>
         <p>
-          مساحة مجتمعية مستقلة. لا ضمان لصلاحية الأكواد أو الأهلية.
-          <br />
-          استخدم الأكواد داخل نسك الرسمي فقط. لا نطلب أي بيانات شخصية.
-        </p>
-        <span>صُنع بروح المشاركة</span>
+          {t("footerDisclaimer")}<br />
+          {t("footerPrivacy")}</p>
+        <span>{t("madeTogether")}</span>
       </footer>
       <div className="toast" role="status" aria-live="polite" key={notice}>
-        {notice}
+        {notice && t(notice)}
       </div>
       <dialog
         aria-labelledby="reset-heading"
@@ -580,10 +554,9 @@ function App() {
         onCancel={() => setReset(false)}
         onClose={() => setReset(false)}
       >
-        <h2 id="reset-heading">تمسح سجلّك وتبدأ من جديد؟</h2>
+        <h2 id="reset-heading">{t("resetTitle")}</h2>
         <p>
-          الأكواد اللي شفتها ممكن تظهر تاني. صدّر السجل أولًا لو محتاج نسخة.
-        </p>
+          {t("resetHelp")}</p>
         <div className="main-actions">
           <button
             className="primary"
@@ -591,18 +564,16 @@ function App() {
               setHistory(newHistory());
               setUndo(undefined);
               setReset(false);
-              setNotice("تم مسح السجل وبدء جولة جديدة.");
+              setNotice("resetNotice");
             }}
           >
-            نعم، امسح السجل
-          </button>
+            {t("confirmReset")}</button>
           <button
             className="secondary"
             ref={cancelReset}
             onClick={() => setReset(false)}
           >
-            إلغاء
-          </button>
+            {t("cancel")}</button>
         </div>
       </dialog>
     </>
@@ -610,7 +581,9 @@ function App() {
 }
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
-    {import.meta.env.PROD && <Analytics />}
+    <LocaleProvider>
+      <App />
+      {import.meta.env.PROD && <Analytics />}
+    </LocaleProvider>
   </React.StrictMode>,
 );

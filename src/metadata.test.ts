@@ -1,7 +1,8 @@
 import { readFileSync, existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { localizedHtml } from "./localeMetadata";
 
-const html = readFileSync("index.html", "utf8");
+const html = localizedHtml(readFileSync("index.html", "utf8"), "ar");
 const canonical = "https://nusuk.abdallahgaber.dev/";
 const meta = (key: string) => html.match(new RegExp(`<meta (?:name|property)="${key}" content="([^"]+)"`))?.[1];
 
@@ -9,8 +10,8 @@ describe("static crawler metadata", () => {
   it("has one canonical route, consistent social URLs and Arabic document language", () => {
     expect(html).toContain('<html lang="ar" dir="rtl">');
     expect(html.match(/rel="canonical"/g)).toHaveLength(1);
-    expect(html).toContain(`rel="canonical" href="${canonical}"`);
-    expect(meta("og:url")).toBe(canonical);
+    expect(html).toContain(`rel="canonical" href="${canonical}ar/"`);
+    expect(meta("og:url")).toBe(canonical + "ar/");
     expect(meta("og:type")).toBe("website");
     expect(meta("twitter:card")).toBe("summary_large_image");
     const image = new URL(meta("og:image")!);
@@ -28,10 +29,10 @@ describe("static crawler metadata", () => {
     const robots = readFileSync("public/robots.txt", "utf8");
     const sitemap = readFileSync("public/sitemap.xml", "utf8");
     expect(robots).toContain(`Sitemap: ${canonical}sitemap.xml`);
-    expect(sitemap.match(/<loc>/g)).toHaveLength(1);
-    expect(sitemap).toContain(`<loc>${canonical}</loc>`);
+    expect(sitemap.match(/<loc>/g)).toHaveLength(3);
+    expect(sitemap).toContain(`<loc>${canonical}ar/</loc>`);
     const schema = JSON.parse(html.match(/<script type="application\/ld\+json">\s*([\s\S]+?)\s*<\/script>/)![1]);
-    expect(schema).toMatchObject({ "@type": "WebSite", url: canonical, inLanguage: "ar" });
+    expect(schema).toMatchObject({ "@type": "WebSite", url: canonical + "ar/", inLanguage: "ar" });
     expect(html).toContain("<noscript>");
     expect(html).not.toMatch(/11,775|١١٬٧٧٥|١٬١٣١|١ نوفمبر/);
   });
