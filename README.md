@@ -1,29 +1,77 @@
 # مفاتيح نسك · Nusuk Codes Hub
 
-Independent Arabic-first community code browser. Not affiliated with Nusuk. All codes remain **unverified**.
+<p dir="rtl" lang="ar">أداة مجتمعية مجانية لتصفح أكواد تحدي نسك والبحث عنها ونسخها، مع حفظ تقدمك على متصفحك. مشروع مستقل غير تابع لنسك أو وزارة الحج والعمرة السعودية. الأكواد غير متحقق من صلاحيتها.</p>
 
-## Public app
+An open-source, community-driven companion for discovering and organizing Nusuk challenge codes.
 
-Node 22+. `npm ci`, `npm run dev` (localhost:5173).
+**[Open Nusuk Codes Hub](https://nusuk.abdallahgaber.dev)** · [Contribute](CONTRIBUTING.md) · [Report a bug](https://github.com/abdallah-gaber/nusuk-codes/issues)
 
-Checks: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`. Pipeline compatibility tests also need Python 3.13 (no admin SDK required for those tests).
+This is an independent community project, unaffiliated with Nusuk or the Saudi Ministry of Hajj and Umrah.
 
-Responsive RTL copy-first UI, local history/Undo/import/export, seeded unseen browsing, compact accessible tips, official links with caveats, CDN-only snapshots and cache fallback. No frontend Firebase SDK, login, Firestore writes or privileged API. The checked-in CDN feed contains 1,540 unverified current-season community codes; the original 1,132-code asset is retained for rollback.
+## Why it exists
 
-Vercel Web Analytics is mounted once in production builds using `@vercel/analytics/react`. Enable Web Analytics in the Vercel project and deploy the reviewed change to begin collecting page views. Local development does not mount Analytics. No custom events, code values or local browsing history are sent by application tracking code; no analytics credentials or environment variables are required.
+Codes shared across social media are easy to lose and difficult to organize. This started as a personal tool to browse them without repetition and is shared freely so others can search, copy and track their own progress.
 
-## Phase 2A administrative pipeline
+Copy a code, open the official Nusuk app, paste it into the code field and follow the app's verification flow.
 
-Implemented; restricted production administrative access is now configured. **The approved import and display review are complete: 1,540 published/unverified codes, 1,583 source records and 1,540 review audits. Administrative updates are disabled.** See [activation status](docs/PHASE2A_ACTIVATION.md). Firestore is the configured administrative source of truth. The deployed and supplied Security Rules deny every public Firestore read/write. Imports default to dry-run, preserve case and provenance, use deterministic IDs and bounded transactions, and never promote status. Moderation and snapshot promotion are separate explicitly confirmed operations.
+## Features
 
-Start with the full [safe activation runbook](docs/PHASE2A_ADMIN.md). It covers local/emulator setup, existing-data exports, least-privilege credentials, initial migration, future CSVs, review, staging, Git/PR publication, rollback, operation estimates and emergency stop.
+- No-repeat browsing based on this browser's saved history.
+- Quick copying that preserves exact capitalization.
+- Local search with All, Unseen, Tried and Skipped filters.
+- Personal progress, Tried/Skipped annotations and Undo.
+- Local history export/import for manual transfer between browsers.
+- Arabic-first RTL layout, responsive screens and light/dark themes.
+- Official Nusuk sharing links. These may open without navigating or filling the code, so manual copy/paste is the recommended flow.
 
-Local admin checks: create `admin/.venv`, install `admin/requirements-lock.txt`, then `npm run lint:admin`, `npm run test:admin`, and (Java 21+) `npm run test:emulator`. The read-only CI workflow needs no secrets and never publishes.
+![Production Arabic interface showing 11,775 codes, the code browser, personal progress and local search](docs/qa/readme-production-desktop.jpg)
 
-`npm run validate:csv -- --input FILE.csv --season 2026-11 --observed-at ISO_TIMESTAMP` is offline. `npm run admin -- --help` lists administrative commands. `npm run snapshot` now stages published Firestore data; legacy preview regeneration is staging-only via `npm run snapshot:preview -- --output .admin-work/preview-fixture`. Nothing automatically replaces `public/data/`.
+## Current season
 
-User submissions, invalid-code reports, scraping, billing, Firebase scheduled services/Functions and later phases remain off. The existing deny-all rules were preserved and index exemptions deployed. The owner explicitly approved the reconciled 408-code addition and policy-based community publication. See the [publication execution record and rollback instructions](imports/2026-11-01/PUBLICATION_RESULT.md).
+The checked-in November 2026 snapshot contains **11,775 published, distinct code strings**, checked against the manifest and snapshot on November 5, 2026. Every entry remains **community-unverified**. Distinct strings do not establish working codes, successful redemption or eligibility. Consult the checked-in manifest for the latest release count. [Snapshot manifest](public/data/manifest.json)
 
-See [ARCHITECTURE.md](ARCHITECTURE.md), [OPERATIONS.md](OPERATIONS.md), [SETUP_OWNER.md](SETUP_OWNER.md), [DATA_PROVENANCE.md](DATA_PROVENANCE.md) and `docs/qa/PHASE2A_VALIDATION.md`.
+## Principles
 
-Routine CSV updates now have a one-confirmation incremental CLI: `npm run codes:update -- --file FILE.csv --dry-run` / `--apply`. See [QUICK_IMPORT.md](docs/QUICK_IMPORT.md) for activation gates, quota estimates, PR handoff, periodic backups and rollback. Quick-import writes remain disabled by default.
+- **Free and open source.** The source code is MIT-licensed and contributions are welcome.
+- **Privacy first.** Progress stays in browser storage with manual export/import. Production builds include Vercel Web Analytics for page views. Application tracking code sends no code values or local history.
+- **Transparent provenance.** Public snapshots expose source domains and observation dates. Administrative provenance is maintained separately.
+- **Safety and honest claims.** No login, passwords or OTPs are needed here. Syntax and publication approval never establish redemption.
+- **Season awareness.** Codes and local history belong to a specific season. Old codes are not automatically carried forward.
+
+## Seasons and future development
+
+For each officially announced edition, review the challenge and rules, prepare a distinct season, collect and validate public community sources, and publish reviewed, integrity-checked snapshots. Preserve completed seasons and reassess possible code reuse using fresh evidence before owner approval. Multi-season support is a future implementation decision. [Season policy](docs/SEASONS.md)
+
+## Contribute
+
+Help with bugs, Arabic wording, accessibility, RTL layouts, tests or small improvements. Start with an Issue and send a focused PR. Read the contribution guide and community standards before participating. [CONTRIBUTING.md](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
+
+## Development
+
+Use **Node.js 22.12+** and npm. Frontend tests also invoke **Python 3.13** for snapshot compatibility, without requiring Firebase credentials or the admin SDK.
+
+```sh
+git clone https://github.com/abdallah-gaber/nusuk-codes.git
+cd nusuk-codes
+npm ci
+npm run dev
+```
+
+Open the local address printed by Vite. Run the frontend checks before a PR.
+
+```sh
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+Vite builds the static site into `dist/`. The public app loads integrity-checked CDN snapshots and keeps browsing local. Public visitors never access Firestore.
+
+Technical details live in the architecture and provenance docs. Privileged administration has separate setup and runbooks, including additional Python and emulator checks. [Architecture](ARCHITECTURE.md) · [Provenance](DATA_PROVENANCE.md) · [Operations](OPERATIONS.md) · [Owner setup](SETUP_OWNER.md) · [Quick Import](docs/QUICK_IMPORT.md) · [Full admin runbook](docs/PHASE2A_ADMIN.md)
+
+## License and disclaimer
+
+Source code is available under the MIT License. This does not assert ownership of third-party community codes, official Nusuk branding or external data sources, or grant rights to them. [LICENSE](LICENSE)
+
+No code redemption, reward or eligibility is guaranteed. The official Nusuk app and its current rules remain the source of truth for challenge participation.
