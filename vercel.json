@@ -15,5 +15,13 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {"source": "/ar", "destination": "/ar/index.html"},
+    {"source": "/ar/", "destination": "/ar/index.html"},
+    {"source": "/en", "destination": "/en/index.html"},
+    {"source": "/en/", "destination": "/en/index.html"},
+    {"source": "/id", "destination": "/id/index.html"},
+    {"source": "/id/", "destination": "/id/index.html"}
   ]
 }

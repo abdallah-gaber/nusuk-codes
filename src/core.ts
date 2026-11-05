@@ -1,3 +1,5 @@
+import { LocalizedError } from "./i18n";
+
 export const SEASON = "nov-2026";
 export const HISTORY_KEY = `nusuk:history:${SEASON}:v1`;
 export type Entry = {
@@ -56,7 +58,7 @@ export function parseHistory(raw: string): History {
         ),
     )
   )
-    throw new Error("ملف سجل غير صالح أو من موسم مختلف");
+    throw new LocalizedError("invalidHistory");
   const { current, ...history } = h;
   return {
     ...history,
@@ -127,14 +129,14 @@ export function validateManifest(m: Manifest) {
     typeof m.readOnly !== "boolean" ||
     m.candidatePreview !== true
   )
-    throw new Error("بيانات الموسم غير متوافقة");
+    throw new LocalizedError("invalidManifest");
 }
 export async function verifySnapshot(
   manifest: Manifest,
   raw: string,
 ): Promise<Entry[]> {
   validateManifest(manifest);
-  if (raw.length > 4000000) throw new Error("ملف البيانات أكبر من المسموح");
+  if (raw.length > 4000000) throw new LocalizedError("snapshotTooLarge");
   const hash = [
     ...new Uint8Array(
       await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw)),
@@ -143,7 +145,7 @@ export async function verifySnapshot(
     .map((v) => v.toString(16).padStart(2, "0"))
     .join("");
   if (hash !== manifest.snapshotSha256)
-    throw new Error("تعذر التأكد من سلامة ملف البيانات");
+    throw new LocalizedError("checksumError");
   const data = JSON.parse(raw);
   if (
     data.schemaVersion !== 1 ||
@@ -167,7 +169,7 @@ export async function verifySnapshot(
           c.observedAt,
     )
   )
-    throw new Error("ملف الأكواد غير متوافق");
+    throw new LocalizedError("invalidSnapshot");
   return data.codes;
 }
 const CACHE_KEY = "nusuk:last-good:v1";
@@ -206,7 +208,7 @@ export async function loadFeed(): Promise<Feed> {
     } catch {
       /* Never use an invalid cached snapshot. */
     }
-    throw new Error("تعذر تحميل الأكواد. اتأكد من اتصالك وجرب تاني.");
+    throw new LocalizedError("loadError");
   } finally {
     clearTimeout(timeout);
   }
