@@ -94,7 +94,10 @@ describe("CDN failure and cache fallback", () => {
     expect(feed.cached).toBe(false);
     expect(fetcher).toHaveBeenCalledTimes(2);
     fetcher.mockRejectedValue(new Error("offline"));
-    expect((await loadFeed()).cached).toBe(true);
+    const cached = await loadFeed();
+    expect(cached.cached).toBe(true);
+    expect(cached.manifest.generatedAt).toBe(manifest.generatedAt);
+    expect(cached.manifest.season).toBe(manifest.season);
   });
   it("fails gracefully without a cache and rejects corrupted cached data", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
