@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f7f7f0"/>
+  <rect x="28" y="28" width="1144" height="574" rx="28" fill="#fffefa" stroke="#dfe3d8" stroke-width="2"/>
+  <rect x="74" y="78" width="112" height="112" rx="28" fill="#185343"/>
+  <path d="M130 98C136 121 143 128 166 134C143 140 136 147 130 170C124 147 117 140 94 134C117 128 124 121 130 98Z" fill="#d3b578"/>
+  <g font-family="Tahoma, Arial, sans-serif" direction="rtl" text-anchor="start">
+    <text x="1100" y="122" font-size="26" fill="#64736a">من المجتمع، للمجتمع</text>
+    <text x="1100" y="270" font-size="112" font-weight="700" fill="#185343">مفاتيح نسك</text>
+    <text x="1100" y="365" font-size="46" font-weight="700" fill="#203e36">تصفّح. ابحث. تابع تقدمك.</text>
+    <text x="1100" y="429" font-size="32" fill="#64736a">أكواد المجتمع في مكان واحد</text>
+    <text x="1100" y="550" font-size="24" fill="#203e36">مشروع مستقل · الأكواد غير متحقق منها</text>
+  </g>
+  <path d="M76 486H1124" stroke="#dfe3d8" stroke-width="2"/>
+  <text x="76" y="550" font-family="Arial, sans-serif" font-size="27" fill="#185343">nusuk.abdallahgaber.dev</text>
+</svg>

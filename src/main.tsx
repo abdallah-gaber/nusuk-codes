@@ -17,6 +17,7 @@ import "./style.css";
 import { TipsTicker } from "./TipsTicker";
 import { CodeList } from "./CodeList";
 import { getProgress } from "./discovery";
+import { formatDate, formatSeason } from "./presentation";
 
 function initialHistory() {
   try {
@@ -27,7 +28,7 @@ function initialHistory() {
 }
 function App() {
   const [history, setHistory] = useState<History>(initialHistory);
-  const [now] = useState(Date.now);
+  const [now, setNow] = useState(Date.now);
   const [feed, setFeed] = useState<Feed>();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -197,6 +198,10 @@ function App() {
     }
     if (file.current) file.current.value = "";
   }
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
   const stale =
     feed && now - Date.parse(feed.manifest.generatedAt) > 7 * 86400000;
   return (
@@ -242,7 +247,7 @@ function App() {
       <main>
         <div className="season-bar">
           <span>مساحة مجتمعية مستقلة</span>
-          <span>نوفمبر ٢٠٢٦</span>
+          <span>{feed ? formatSeason(feed.manifest.season) : loading ? "جارٍ تحميل بيانات الموسم…" : "بيانات الموسم غير متاحة"}</span>
         </div>
         <TipsTicker />
         {(!online || feed?.cached || stale || storageWarning) && (
@@ -298,8 +303,8 @@ function App() {
               </div>
             ) : !order.length ? (
               <div className="state">
-                <h2>لا توجد أكواد مؤكدة للموسم الحالي بعد</h2>
-                <p>ولا توجد مرشحات متاحة في هذه النسخة. ارجع لنا لاحقًا.</p>
+                <h2>لا توجد أكواد مجتمعية في هذه النسخة</h2>
+                <p>راجع نسك لمعرفة شروط التحدي، أو جرّب تحميل القائمة لاحقًا.</p>
                 <a
                   href="https://services.nusuk.sa/app"
                   target="_blank"
@@ -395,7 +400,7 @@ function App() {
             <p>
               سجلك على جهازك بس.
               <br />
-              من غير حساب أو بيانات شخصية.
+              المشاهدات والتجارب هنا مش تأكيد تفعيل في نسك.
             </p>
             <div className="progress-summary">
               <span>الإجمالي <b>{progress.total.toLocaleString("ar-EG")}</b> كود</span>
@@ -449,14 +454,9 @@ function App() {
           onCopy={(code) => void copy(code, "تم نسخ الكود. النسخ من القائمة لا يغيّر سجلك.")} />
         <div className="freshness">
           <span>
-            ◷ آخر تحديث:{" "}
-            {feed
-              ? new Date(feed.manifest.generatedAt).toLocaleDateString(
-                  "ar-EG",
-                  { day: "numeric", month: "long", year: "numeric" },
-                )
-              : "—"}{" "}
-            · {feed?.codes.length.toLocaleString("ar-EG") || "—"} مرشح
+            ◷ {feed?.cached ? "تاريخ إنشاء النسخة المحفوظة" : "تاريخ إنشاء نسخة البيانات"}:{" "}
+            {formatDate(feed?.manifest.generatedAt)} ·{" "}
+            {feed ? feed.codes.length.toLocaleString("ar-EG") : "—"} كود مجتمعي غير متحقق منه
           </span>
           <a href="#sources">اعرف مصدر الأكواد ↗</a>
         </div>
@@ -498,29 +498,21 @@ function App() {
           <div>
             <h2>شفافية من أول مفتاح.</h2>
             <p>
-              دي بيانات مجتمعية غير متحقق من تفعيلها داخل نسك. البيانات الأولية
-              شملت ١٬١٣١ كود من منشور فيسبوك صدّره مساهم، وكود واحد من رابط
-              مشاركة قدّمه مستخدم. تاريخ الرصد ١ نوفمبر ٢٠٢٦ لا يثبت تاريخ النشر
-              أو أهلية الموسم. لا توجد في هذه القائمة تأكيدات تفعيل مرتبطة
-              بأكواد محددة.
+              الأكواد المعروضة مجمّعة من مصادر مجتمعية عامة، مع الاحتفاظ بمعلومات
+              عن مصدر وتاريخ رصد كل كود. بنراجع صيغة الأكواد والتكرار قبل نشرها،
+              لكن مش بنقدر نتحقق من قبولها أو صلاحيتها داخل تطبيق نسك.
+              وجود أي كود هنا مش ضمان لتفعيله أو لأهليته للمسابقة.
             </p>
             {entry && (
               <p className="source-detail">
-                مصدر الكود الحالي: <bdi>{entry.source}</bdi> · رُصد في{" "}
-                {new Date(`${entry.observedAt}T00:00:00Z`).toLocaleDateString(
-                  "ar-EG",
-                  {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                    timeZone: "UTC",
-                  },
-                )}
+                مصدر رصد الكود المعروض: <bdi>{entry.source}</bdi> · تاريخ الرصد:{" "}
+                {formatDate(`${entry.observedAt}T00:00:00Z`)}
               </p>
             )}
             <p className="source-detail">
-              الإضافة والإبلاغ متوقفان لحين توفير قناة مراجعة محمية. لن نطلب
-              حساب نسك أو هاتفك أو كلمة مرور أو رمز OTP.
+              تاريخ الرصد لا يثبت تاريخ إنشاء الكود أو نشره أو قبوله داخل نسك.
+              إضافة الأكواد والإبلاغ عنها من خلال الموقع غير متاحين حاليًا.
+              مش هنطلب منك حساب نسك أو رقم هاتفك أو كلمة المرور أو رمز OTP.
             </p>
           </div>
         </section>
@@ -549,7 +541,7 @@ function App() {
             ],
             [
               "الأكواد جاية منين؟",
-              "بيانات مجتمعية مرشحة غير متحقق منها. لا ننشر أسماء المعلقين أو ملفاتهم الشخصية، ولا نستخدم أكواد المواسم القديمة.",
+              "بيانات مجتمعية مرشحة غير متحقق منها. بنعرض مصدر الرصد وتاريخه، من غير أسماء المشاركين أو ملفاتهم الشخصية. أكواد المواسم السابقة لا تُنقل تلقائيًا لقائمة الموسم.",
             ],
           ].map(([q, a]) => (
             <details key={q}>
@@ -582,7 +574,7 @@ function App() {
           <br />
           استخدم الأكواد داخل نسك الرسمي فقط. لا نطلب أي بيانات شخصية.
         </p>
-        <span>صُنع بروح المشاركة · ٢٠٢٦</span>
+        <span>صُنع بروح المشاركة</span>
       </footer>
       <div className="toast" role="status" aria-live="polite" key={notice}>
         {notice}
