@@ -13,6 +13,7 @@ export type History = {
   seen: string[];
   tried: string[];
   skipped: string[];
+  current?: string | null;
 };
 export type Manifest = {
   schemaVersion: number;
@@ -56,13 +57,50 @@ export function parseHistory(raw: string): History {
     )
   )
     throw new Error("ملف سجل غير صالح أو من موسم مختلف");
+  const { current, ...history } = h;
   return {
-    ...h,
+    ...history,
+    ...(current === null || (typeof current === "string" && /^NG-[A-Za-z0-9]{8}$/.test(current))
+      ? { current } : {}),
     seen: [...new Set<string>(h.seen)],
     tried: [...new Set<string>(h.tried)],
     skipped: [...new Set<string>(h.skipped)],
   };
 }
+// Optional cursor metadata stays in the existing v1 record for atomic cross-tab updates.
+export function restoreCurrent(history: History, order: readonly Entry[]): History {
+  const available = new Set(order.map((entry) => entry.code));
+  const seen = new Set(history.seen);
+  if (history.current && available.has(history.current) && seen.has(history.current))
+    return history;
+
+  // Older exports/tabs have no cursor. Recover their last available display without a new view.
+  if (history.current !== null) {
+    const previous = [...history.seen].reverse().find((code) => available.has(code));
+    if (previous) return { ...history, current: previous };
+  }
+  const next = order.find((entry) => !seen.has(entry.code));
+  if (!next && history.current === null) return history;
+  return {
+    ...history,
+    current: next?.code ?? null,
+    seen: next ? [...history.seen, next.code] : history.seen,
+  };
+}
+
+export function readHistory(storage: Pick<Storage, "getItem">): History {
+  try {
+    return parseHistory(storage.getItem(HISTORY_KEY) || "");
+  } catch {
+    return newHistory();
+  }
+}
+
+export function writeHistory(storage: Pick<Storage, "getItem" | "setItem">, history: History) {
+  const raw = JSON.stringify(history);
+  if (storage.getItem(HISTORY_KEY) !== raw) storage.setItem(HISTORY_KEY, raw);
+}
+
 export function shuffled<T>(items: T[], seed: number): T[] {
   const result = [...items];
   let state = seed;
@@ -184,6 +222,7 @@ export function moveForward(
     current: next?.code,
     history: {
       ...history,
+      current: next?.code ?? null,
       seen: next ? [...history.seen, next.code] : history.seen,
       ...(action !== "next" && current
         ? { [action]: [...new Set([...history[action], current])] }

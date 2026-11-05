@@ -9,6 +9,9 @@ import {
   newHistory,
   officialUrl,
   parseHistory,
+  readHistory,
+  restoreCurrent,
+  writeHistory,
   shuffled,
   type Feed,
   type History,
@@ -21,7 +24,7 @@ import { formatDate, formatSeason } from "./presentation";
 
 function initialHistory() {
   try {
-    return parseHistory(localStorage.getItem(HISTORY_KEY) || "");
+    return readHistory(localStorage);
   } catch {
     return newHistory();
   }
@@ -32,8 +35,7 @@ function App() {
   const [feed, setFeed] = useState<Feed>();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [current, setCurrent] = useState<string>();
-  const [undo, setUndo] = useState<{ history: History; current?: string }>();
+  const [undo, setUndo] = useState<History>();
   const [notice, setNotice] = useState("");
   const [storageWarning, setStorageWarning] = useState(false);
   const [online, setOnline] = useState(navigator.onLine);
@@ -68,12 +70,13 @@ function App() {
     void reload();
   }, []);
   useEffect(() => {
+    if (feed && restoreCurrent(history, order) !== history) return;
     try {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+      writeHistory(localStorage, history);
     } catch {
       setStorageWarning(true);
     }
-  }, [history]);
+  }, [history, feed, order]);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     try {
@@ -105,17 +108,8 @@ function App() {
     };
   }, []);
   useEffect(() => {
-    if (!current && order.length) {
-      const next = order.find((e) => !history.seen.includes(e.code));
-      if (next) {
-        setCurrent(next.code);
-        setHistory((h) => ({
-          ...h,
-          seen: [...new Set([...h.seen, next.code])],
-        }));
-      }
-    }
-  }, [current, order, history.seen]);
+    if (feed) setHistory((h) => restoreCurrent(h, order));
+  }, [feed, order, history]);
   useEffect(() => {
     if (reset) {
       dialog.current?.showModal();
@@ -127,7 +121,8 @@ function App() {
     const timer = setTimeout(() => setNotice(""), 5000);
     return () => clearTimeout(timer);
   }, [notice]);
-  const entry = feed?.codes.find((e) => e.code === current);
+  const entry = feed?.codes.find((e) => e.code === history.current);
+  const current = entry?.code;
   const progress = useMemo(
     () => getProgress(feed?.codes || [], history),
     [feed, history],
@@ -136,10 +131,9 @@ function App() {
     ? "أقل من ٠٫١٪"
     : `${Math.min(progress.percentage, progress.remaining ? 99.9 : 100).toLocaleString("ar-EG", { maximumFractionDigits: 1 })}٪`;
   function advance(action: "next" | "skipped" | "tried") {
-    setUndo({ history, current });
+    setUndo(history);
     const next = moveForward(history, current, order, action);
     setHistory(next.history);
-    setCurrent(next.current);
     setNotice(
       action === "tried"
         ? "اتسجلت كتجربة محلية، مش تأكيد صلاحية."
@@ -190,7 +184,6 @@ function App() {
         tried: [...new Set([...old.tried, ...h.tried])],
         skipped: [...new Set([...old.skipped, ...h.skipped])],
       }));
-      setCurrent(undefined);
       setUndo(undefined);
       setNotice("تم دمج السجل مع بياناتك الحالية.");
     } catch (e) {
@@ -383,8 +376,7 @@ function App() {
                 disabled={!undo}
                 onClick={() => {
                   if (undo) {
-                    setHistory(undo.history);
-                    setCurrent(undo.current);
+                    setHistory(undo);
                     setUndo(undefined);
                     setNotice("تم التراجع عن آخر خطوة.");
                   }
@@ -594,7 +586,6 @@ function App() {
             className="primary"
             onClick={() => {
               setHistory(newHistory());
-              setCurrent(undefined);
               setUndo(undefined);
               setReset(false);
               setNotice("تم مسح السجل وبدء جولة جديدة.");

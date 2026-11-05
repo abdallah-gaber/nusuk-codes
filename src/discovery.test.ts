@@ -90,7 +90,7 @@ describe("derived personal progress", () => {
     const reset = newHistory();
     expect(getProgress(entries, reset)).toMatchObject({ seen: 0, remaining: 3, percentage: 0 });
     expect(filterCodes(entries, reset, "", "unseen")).toEqual(entries);
-    // The unchanged display effect then marks the first main-browser code seen.
+    // The first main-browser display still counts as seen.
     expect(getProgress(entries, { ...reset, seen: [entries[0].code] }).seen).toBe(1);
     expect(incoming.version).toBe(1);
   });
