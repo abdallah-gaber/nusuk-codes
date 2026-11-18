@@ -2,6 +2,8 @@
 
 Implementation and local QA: November 18, 2026. No account configuration, production data updates, merge or production deployment is part of this change.
 
+GA4 troubleshooting: [command transport incident and fix](GA4_TRANSPORT_FIX.md) documents the production queue-format defect, regression checks and owner-only release verification.
+
 ## Baseline and rationale
 
 The owner supplied these Vercel Analytics figures; this work did not access the account dashboard:
