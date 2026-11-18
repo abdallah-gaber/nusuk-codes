@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-18",
+  "target": "Local production build /en/, mobile Lighthouse default throttling",
+  "lighthouseVersion": "13.6.0",
+  "scores": {
+    "performance": 96,
+    "accessibility": 100,
+    "best-practices": 100,
+    "seo": 100
+  },
+  "metrics": {
+    "first-contentful-paint": "0.8 s",
+    "largest-contentful-paint": "2.3 s",
+    "total-blocking-time": "170 ms",
+    "cumulative-layout-shift": "0.046",
+    "speed-index": "0.9 s"
+  },
+  "limitations": [
+    "Lab results; not production field Core Web Vitals.",
+    "No GA Measurement ID configured; Google tag load excluded.",
+    "Earlier concurrent run scored 70 performance, 96 accessibility; final run follows contrast and theme-name fixes."
+  ]
+}

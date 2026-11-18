@@ -21,19 +21,19 @@ Copy a code, open the official Nusuk app, paste it into the code field and follo
 - Local search with All, Unseen, Tried and Skipped filters.
 - Personal progress, Tried/Skipped annotations and Undo.
 - Local history export/import for manual transfer between browsers.
-- Arabic-first RTL layout, responsive screens and light/dark themes.
+- Arabic and Urdu RTL, English and Indonesian LTR, responsive screens and light/dark themes.
 - Official Nusuk sharing links. These may open without navigating or filling the code, so manual copy/paste is the recommended flow.
 
 ![Production Arabic interface showing 11,775 codes, the code browser, personal progress and local search](docs/qa/readme-production-desktop.jpg)
 
 ## Current season
 
-The checked-in November 2026 snapshot contains **11,775 published, distinct code strings**, checked against the manifest and snapshot on November 5, 2026. Every entry remains **community-unverified**. Distinct strings do not establish working codes, successful redemption or eligibility. Consult the checked-in manifest for the latest release count. [Snapshot manifest](public/data/manifest.json)
+The checked-in November 2026 snapshot contains **11,779 published, distinct code strings**, checked against the manifest and snapshot on November 18, 2026. Every entry remains **community-unverified**. Distinct strings do not establish working codes, successful redemption or eligibility. Consult the checked-in manifest for the latest release count. [Snapshot manifest](public/data/manifest.json)
 
 ## Principles
 
 - **Free and open source.** The source code is MIT-licensed and contributions are welcome.
-- **Privacy first.** Progress stays in browser storage with manual export/import. Production builds include Vercel Web Analytics for page views. Application tracking code sends no code values or local history.
+- **Privacy first.** Progress stays in browser storage with manual export/import. Production builds include Vercel Web Analytics for page views. Optional Google Analytics requires production configuration and consent. Application tracking events send no code values or local history. [Analytics, privacy and owner setup](docs/GROWTH_AND_ANALYTICS.md)
 - **Transparent provenance.** Public snapshots expose source domains and observation dates. Administrative provenance is maintained separately.
 - **Safety and honest claims.** No login, passwords or OTPs are needed here. Syntax and publication approval never establish redemption.
 - **Season awareness.** Codes and local history belong to a specific season. Old codes are not automatically carried forward.
