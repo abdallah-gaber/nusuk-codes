@@ -122,7 +122,7 @@ export function readConsent(storage: Pick<Storage, "getItem">): Consent | undefi
   } catch { return undefined; }
 }
 export function saveConsent(storage: Pick<Storage, "setItem">, consent: Consent) {
-  try { storage.setItem(CONSENT_KEY, consent); } catch { /* Session-only choice. */ }
+  try { storage.setItem(CONSENT_KEY, consent); return true; } catch { return false; }
 }
 declare global {
   interface Window { dataLayer?: unknown[]; gtag?: (...command: unknown[]) => void; }
