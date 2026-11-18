@@ -23,6 +23,11 @@ html {
 }
 body {
   margin: 0;
+  padding-bottom: var(--consent-banner-space, 0px);
+}
+html { scroll-padding-bottom: calc(var(--consent-banner-space, 0px) + 16px); }
+button, a, input, summary, [tabindex] {
+  scroll-margin-block-end: calc(var(--consent-banner-space, 0px) + 16px);
 }
 button,
 a,
@@ -650,7 +655,7 @@ footer > span {
 }
 .toast {
   position: fixed;
-  bottom: 22px;
+  bottom: calc(22px + var(--consent-banner-space, 0px));
   left: 50%;
   transform: translateX(-50%);
   padding: 14px 20px;
@@ -1181,3 +1186,34 @@ dialog .main-actions {
 .static-intro a { text-decoration: underline; }
 .static-intro li { margin: 12px 0; }
 .static-intro nav { padding: 20px 0; }
+.consent-banner {
+  position: fixed;
+  inset-inline: 12px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 30;
+  max-width: 720px;
+  margin-inline: auto;
+  padding: 14px 18px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px #0002;
+  max-height: calc(100dvh - 36px);
+  overflow-y: auto;
+}
+.consent-banner > div:first-child { flex: 1 1 300px; }
+.consent-banner h2 { font-size: 14px; line-height: 1.6; font-weight: 700; }
+.consent-banner p { font-size: 12px; line-height: 1.75; margin-top: 5px; }
+.consent-banner-actions {
+  flex: 1 1 220px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.consent-banner-actions > button { min-height: 44px; padding: 10px; }
+:root[lang="ur"] .consent-banner p { font-size: 15px; line-height: 1.9; }

@@ -1,0 +1,107 @@
+{
+  "date": "2026-11-18",
+  "production": {
+    "scope": "Actual deployed PR #23, isolated headless Chrome; new banner not deployed",
+    "fresh": {
+      "googleTagRequests": 0,
+      "collectRequests": 0
+    },
+    "decline": {
+      "googleTagRequests": 0,
+      "collectRequests": 0
+    },
+    "accept": {
+      "tagRequests": 1,
+      "collectionResponseStatus": 204
+    },
+    "regrant": {
+      "tagElements": 1,
+      "configs": 1,
+      "events": [
+        "page_view",
+        "copy_code"
+      ]
+    },
+    "crossTabWithdrawal": {
+      "optOut": true,
+      "newManualCommands": 0
+    },
+    "afterSettledWithdrawal": {
+      "newManualCommands": 0,
+      "optOut": true
+    },
+    "queuedBatchAfterWithdrawal": {
+      "phase": "withdrawn",
+      "events": [
+        {
+          "event": "next_code",
+          "locale": "en",
+          "page": "https://nusuk.abdallahgaber.dev/en/",
+          "sensitive": false
+        },
+        {
+          "event": "language_change",
+          "locale": "ur",
+          "page": "https://nusuk.abdallahgaber.dev/en/",
+          "sensitive": false
+        },
+        {
+          "event": "page_view",
+          "locale": "ur",
+          "page": "https://nusuk.abdallahgaber.dev/ur/",
+          "sensitive": false
+        }
+      ],
+      "optOutAtObservation": true
+    },
+    "delayedScript": {
+      "scriptStatus": 200,
+      "collectionsAfterWithdrawAndRelease": 0,
+      "nextWorks": true,
+      "optOut": true
+    },
+    "queryProbe": [
+      {
+        "page": "https://nusuk.abdallahgaber.dev/en/",
+        "containsProbe": false
+      },
+      {
+        "page": "https://nusuk.abdallahgaber.dev/en/",
+        "containsProbe": false
+      }
+    ]
+  },
+  "gating": [
+    {
+      "kind": "preview",
+      "googleRequests": 0,
+      "banner": false
+    },
+    {
+      "kind": "localhost",
+      "googleRequests": 0,
+      "banner": false
+    }
+  ],
+  "lighthouse": {
+    "scope": "Local configured build via private canonical-origin interception; new banner visible; no consent granted",
+    "scores": {
+      "performance": 100,
+      "accessibility": 100,
+      "best-practices": 96,
+      "seo": 100
+    },
+    "metrics": {
+      "first-contentful-paint": "1.1 s",
+      "largest-contentful-paint": "1.1 s",
+      "total-blocking-time": "50 ms",
+      "cumulative-layout-shift": "0",
+      "speed-index": "1.6 s"
+    },
+    "limitations": [
+      "Private route returned 404 for the Vercel insights script, accounting for the Best Practices console-error deduction.",
+      "Back/forward cache disabled by browser test flags, not app configuration.",
+      "Not production field Core Web Vitals; no physical mobile device or GA dashboard access."
+    ]
+  }
+}
