@@ -4,6 +4,8 @@ Implementation and local QA: November 18, 2026. No account configuration, produc
 
 GA4 troubleshooting: [command transport incident and fix](GA4_TRANSPORT_FIX.md) documents the production queue-format defect, regression checks and owner-only release verification.
 
+Final consent update: [banner and production privacy QA](CONSENT_PRIVACY_QA.md) covers the non-blocking prompt, storage fallback, cross-tab state and the observed Google SDK buffered-request limitation.
+
 ## Baseline and rationale
 
 The owner supplied these Vercel Analytics figures; this work did not access the account dashboard:
@@ -44,7 +46,7 @@ VERCEL_ENV=preview builds add noindex, nofollow to root and locale HTML, retain 
 
 ## Languages and further localization
 
-All four dictionaries have 187 matching keys and matching placeholders. Arabic and Urdu are RTL; English and Indonesian are LTR. Codes remain LTR with exact case. Numbers and dates use the locale, while code values and source identifiers are never translated.
+All four dictionaries have 190 matching keys and matching placeholders. Arabic and Urdu are RTL; English and Indonesian are LTR. Codes remain LTR with exact case. Numbers and dates use the locale, while code values and source identifiers are never translated.
 
 Resolution remains explicit URL → saved language → supported browser language → Arabic. No IP/country lookup, forced Urdu, suggestion popup or second history format. Existing local language persistence and scroll restoration remain.
 
