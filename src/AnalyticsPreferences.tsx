@@ -2,6 +2,19 @@ import { useEffect, useState } from "react";
 import { useLocale } from "./LocaleProvider";
 import { analytics, CONSENT_KEY, readConsent, saveConsent, type Consent } from "./analytics";
 
+export function AnalyticsPreferencesLink() {
+  const { t } = useLocale();
+  return <a className="privacy-link" href="#analytics-preferences" onClick={(event) => {
+    const preferences = document.getElementById("analytics-preferences") as HTMLDetailsElement | null;
+    if (preferences) {
+      event.preventDefault();
+      preferences.open = true;
+      preferences.querySelector("summary")?.focus();
+      preferences.scrollIntoView({ block: "start" });
+    }
+  }}>{t("analyticsTitle")}</a>;
+}
+
 export function AnalyticsPreferences() {
   const { t, language } = useLocale();
   const [consent, setConsent] = useState<Consent | undefined>(() => {
@@ -28,7 +41,7 @@ export function AnalyticsPreferences() {
     setConsent(value);
   }
   return (
-    <details className="analytics-preferences" open={analytics.eligible && !consent ? true : undefined}>
+    <details id="analytics-preferences" className="analytics-preferences" open={analytics.eligible && !consent ? true : undefined}>
       <summary>{t("analyticsTitle")}</summary>
       <p>{t("analyticsDisclosure")}</p>
       {analytics.eligible ? <>

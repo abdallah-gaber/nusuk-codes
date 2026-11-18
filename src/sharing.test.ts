@@ -35,4 +35,14 @@ describe("canonical localized sharing", () => {
     expect(campaignParameters("?utm_campaign=someone@example.com")).toEqual({});
     expect(campaignParameters("?utm_campaign=urdu_launch&utm_source=private@example.com&utm_medium=social")).toEqual({});
   });
+  it("accepts exactly the Instagram triple and rejects source/medium/case mismatches", () => {
+    expect(campaignParameters("?utm_source=instagram&utm_medium=social&utm_campaign=instagram_community"))
+      .toEqual({ campaign_name: "instagram_community", campaign_source: "instagram", campaign_medium: "social" });
+    for (const query of [
+      "?utm_source=facebook&utm_medium=social&utm_campaign=instagram_community",
+      "?utm_source=instagram&utm_medium=private@example.com&utm_campaign=instagram_community",
+      "?utm_source=Instagram&utm_medium=social&utm_campaign=instagram_community",
+      "?utm_source=instagram&utm_campaign=instagram_community",
+    ]) expect(campaignParameters(query)).toEqual({});
+  });
 });

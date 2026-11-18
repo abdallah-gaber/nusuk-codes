@@ -2,6 +2,7 @@ import { languagePath, SITE_URL, type Language } from "./i18n";
 
 export const campaigns = {
   facebook_groups: { source: "facebook", medium: "social" },
+  instagram_community: { source: "instagram", medium: "social" },
   whatsapp_community: { source: "whatsapp", medium: "messaging" },
   urdu_launch: { source: "community", medium: "social" },
   organic_community: { source: "community", medium: "referral" },

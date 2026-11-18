@@ -102,7 +102,7 @@ See [Google localized-version guidance](https://developers.google.com/search/doc
 1. Create/use a standard free GA4 property and web stream for https://nusuk.abdallahgaber.dev. Do not enable paid Analytics 360, BigQuery billing integrations or Google Signals.
 2. Disable the web stream's entire Enhanced Measurement feature, including automatic page/history changes, scroll, outbound clicks, form and download collection. This is essential: automatic outbound URLs could otherwise include Nusuk codes, and automatic page views could duplicate ours.
 3. Set the public measurement ID and VITE_GA_MANUAL_EVENTS_ONLY=true in Vercel's Production environment only. Do not activate these until the repository change and release are approved.
-4. After release, first decline: confirm no googletagmanager.com tag request. Grant via “Analytics and privacy”: confirm one tag load, one page_view, canonical page_location and no code/query/hash values in collected parameters. Switch language once and verify one additional page view.
+4. After release, first decline: confirm no googletagmanager.com tag request. Use the visible “Analytics and privacy” header link (including mobile) to open the inline preferences near the footer. Grant there: confirm one tag load, one page_view, canonical page_location and no code/query/hash values in collected parameters. Switch language once and verify one additional page view.
 5. Use GA Realtime to inspect the ten events during deliberate interactions. For DebugView, use Google's supported Tag Assistant/Analytics debugging tooling on the owner test session; the app does not enable debug_mode for every visitor. Remove debugging afterward and exclude developer/internal traffic.
 6. Test all three copy sources, Next, Tried → Undo, Skip, official/invitation links, manual language change, share initiation and valid history import/export. Inspect requests and page context, not just event names. Reject invalid imports and verify no import event.
 7. Withdraw consent, check the opt-out flag, cookie removal and absence of subsequent manual events; test cross-tab withdrawal. Repeat with storage blocked, a tag blocker and Facebook/in-app browsers. Regrant should not reload a second tag or double-send page_view.
@@ -118,11 +118,12 @@ Google still receives network/technical data when enabled. Session cookies are r
 
 Vercel has separate provider behavior and visitor metrics; opting out of optional Google does not disable Vercel's existing page measurements. GA consent-based visitors/bounce/engagement and Vercel metrics are not interchangeable.
 
-Only these exact campaign triples enter GA config:
+Only these five exact campaign triples enter GA config:
 
 | Campaign | utm_source | utm_medium |
 | --- | --- | --- |
 | facebook_groups | facebook | social |
+| instagram_community | instagram | social |
 | whatsapp_community | whatsapp | messaging |
 | urdu_launch | community | social |
 | organic_community | community | referral |
@@ -137,7 +138,7 @@ Delivery stays static Vite/React on Vercel CDN. No server functions, databases, 
 
 During implementation, main independently advanced to 11,779 entries (PR #21). The feature branch preserves that upstream feed unchanged, SHA-256 a683aba328ce34d50ee124a1a5d7f8121de0bdddd47252d675dafb6956686373. No snapshot regeneration or publication occurred in this task. Browser screenshots and Lighthouse were captured against the preceding 11,775-code feed, SHA-256 8dc25b75e96a944580773a3af393b867ef11190c64261832ede7b424c605ca50; the final build/checksum checks use the latest upstream feed.
 
-Final main JS is 316.43 kB raw / 98.11 kB gzip (about +7.84 kB gzip against baseline); CSS is 22.56 / 5.77 kB. Static root HTML is 5.94 / 1.79 kB. These sizes exclude the unchanged CDN JSON and Google's optional async tag. All locale dictionaries are bundled for instant switching; this is a deliberate small payload trade-off. Consent delays all Google vendor overhead until opt-in.
+After the review fixes, main JS is 317.95 kB raw / 98.70 kB gzip (about +8.43 kB gzip against baseline); CSS is 22.71 / 5.79 kB. Static root HTML is 5.94 / 1.79 kB. These sizes exclude the unchanged CDN JSON and Google's optional async tag. All locale dictionaries are bundled for instant switching; this is a deliberate small payload trade-off. Consent delays all Google vendor overhead until opt-in.
 
 Vercel Hobby currently includes 50,000 Web Analytics events per team/month; the supplied 1,149 monthly views alone are about 2.3% of that allowance. Other projects and actual team usage are unknown. New custom events go to free standard GA4, not paid Vercel custom events. Hobby analytics collection pauses at its limit rather than automatically purchasing an upgrade. Check the current [Vercel limits](https://vercel.com/docs/analytics/limits-and-pricing) in the owner dashboard; no account quota or upgrade setting was changed.
 
@@ -193,7 +194,7 @@ Rollback: revert the reviewed feature commits through a new reviewed PR. To disa
 | --- | --- |
 | Are searches finding us? | Search Console impressions, clicks, CTR, indexed pages, top queries and locale landing pages |
 | Who uses which language? | GA/Vercel country and locale page breakdowns; compare trends within each provider |
-| Which channels help? | GA traffic acquisition plus the four named campaigns; separate direct/unknown and consent gaps |
+| Which channels help? | GA traffic acquisition plus the five named campaigns; separate direct/unknown and consent gaps |
 | Do people use the tool? | Users with copy_code and open_nusuk; share of consenting sessions with each; never label as redeemed |
 | How deep is interaction? | (copy_code + next_code + skip_code + mark_tried) / engaged sessions, with the exact definition recorded |
 | Are people sharing? | share_website count/users by locale and method; initiations are not confirmed recipients |
@@ -201,3 +202,20 @@ Rollback: revert the reviewed feature commits through a new reviewed PR. To disa
 | Are free limits safe? | Vercel team usage/bandwidth/builds/Web Analytics allowance, GA property health |
 
 Review weekly, not per visitor. Compare a two-week pre/post window rather than promising statistical significance at this audience size. First experiments: native-reviewed Urdu launch in relevant communities; localized WhatsApp links; a useful Facebook group post with permission and an explicit campaign; improve copy instructions based on observed usability; refine titles from real Search Console queries. No automated social scraping, intrusive sharing prompts, paid acquisition or redemption claims.
+
+
+## PR #22 final review follow-up
+
+Instagram distribution now supports exactly utm_source=instagram, utm_medium=social, utm_campaign=instagram_community. Example: https://nusuk.abdallahgaber.dev/en/?utm_source=instagram&utm_medium=social&utm_campaign=instagram_community. Mismatched sources/media, missing fields, unknown names and casing changes are rejected; arbitrary extra query data is never forwarded.
+
+All code copy actions (main browser, search, creator) and copy-link sharing use the same safe clipboard helper. It attempts navigator.clipboard.writeText, then a selectable, read-only temporary LTR textarea with execCommand("copy") when the API is unavailable or rejects. Exact text is preserved. The helper restores focus/selection and removes the field even on failure. It never reads clipboard contents or changes history. Only a resolved modern write or an explicit true legacy return counts as success; copy_code follows success only. Legacy copy is a deprecated best-effort compatibility path, not a guaranteed bypass of in-app browser restrictions. If both mechanisms fail, localized guidance asks the user to select/copy manually. Instagram/Facebook can restrict clipboard or lose user activation after an asynchronous rejection; test real apps and use an external browser/manual copy when necessary. See [MDN compatibility caveats](https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand).
+
+The header now provides a translated, 44px-minimum Analytics and privacy link, visible on mobile, which opens and focuses the inline preferences. The two choice buttons share styling and responsive sizing. Choosing neither keeps Google off; no blocking modal, sticky prompt, forced decision or accept-only affordance is used. Decline/withdraw stays as accessible as accept.
+
+**GA automatic collection boundary:** VITE_GA_MANUAL_EVENTS_ONLY is an owner acknowledgment of stream setup, not a programmatically verified guarantee that the SDK sends only our ten custom events. Disabling Enhanced Measurement and send_page_view prevents the configured automatic page/outbound/form/download/search collection, but standard GA events such as first_visit, session_start and user_engagement and their SDK-generated identifiers/technical parameters may still occur after consent. Session-cookie configuration does not eliminate Google's session identifiers or guarantee browser-session restoration behavior. Our strict allowlist sanitizes application event payloads, not every internal vendor request. See [Google's automatically collected events](https://support.google.com/analytics/answer/9234069?hl=en).
+
+Withdrawal immediately stops application events/page views, sets ga-disable-MEASUREMENT_ID before clearing host cookies and keeps it set through repeated locale effects/withdrawals. No new tag is loaded on regrant. We intentionally use the documented property opt-out flag rather than issue a denied-consent update that might introduce cookieless consent-mode requests. A loaded vendor script stays in memory; previously transmitted/in-flight traffic cannot be recalled. The automated delayed-load test verifies our opt-out commands and event gating, not Google SDK network behavior.
+
+Before activation, validate on a real property with Enhanced Measurement completely off and no extra tags/destinations: inspect all requests (including automatic session/engagement events and unload/beacon traffic), canonical page context, absence of code values/queries, exactly one manual page_view per locale transition, and no subsequent collection after withdrawal or cross-tab withdrawal. Also throttle/block the Google script, grant then withdraw before it loads, and test regrant/reload. If vendor collection after withdrawal or sensitive parameters appear, leave Google disabled and investigate; the local test doubles cannot certify those behaviors. No real-property ingestion or physical Instagram/Facebook/iOS/Android testing is claimed.
+
+Review validation: 40 affected clipboard, preferences, sharing and analytics tests passed; lint, typecheck and production build passed. Eight local viewport checks (four languages at 320/390px) confirmed the header link stays visible, is at least 44px tall and introduces no horizontal overflow; its action opens the panel and focuses the summary. Equal accept/decline markup is tested with an eligible analytics test double; the local browser preview has no Google ID and correctly loads no Google tag. [Mobile header](qa/growth/review-privacy-header-320.jpg) · [Opened inline panel](qa/growth/review-privacy-open-320.jpg). Existing 11,779-record dataset is preserved byte-for-byte against main; no Firestore access or deployment is needed for these fixes. Earlier Lighthouse/screenshots above describe the milestone build before this follow-up, not a new audit of these changes.

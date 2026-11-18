@@ -1168,8 +1168,12 @@ dialog .main-actions {
   font-size: 12px;
 }
 .analytics-preferences p { margin-top: 10px; color: var(--muted); }
-.preference-actions { justify-content: flex-start; }
-.preference-actions > button { flex: 0 1 auto; }
+.preference-actions { justify-content: flex-start; align-items: stretch; }
+.preference-actions > button { flex: 1 1 160px; }
+.header nav > a.privacy-link { display: inline-flex; align-items: center; min-height: 44px; }
+@media (max-width: 760px) {
+  .header nav { flex-wrap: wrap; }
+}
 .static-intro { max-width: 900px; padding: 24px; margin: auto; }
 .static-intro h2,
 .static-intro h3 { margin-top: 18px; }

@@ -60,6 +60,24 @@ describe("consent-gated production analytics", () => {
     expect(runtime.load).toHaveBeenCalledTimes(1);
     expect(runtime.send.mock.calls.filter(([, event]) => event === "page_view")).toHaveLength(2);
   });
+  it("keeps opt-out active during delayed tag loading, repeated withdrawal and locale effects", () => {
+    const { client, runtime } = fixture();
+    client.setConsent("granted"); // load requested; real tag need not have finished.
+    client.setConsent("denied");
+    const count = runtime.send.mock.calls.length;
+    for (const locale of languages) {
+      client.setPage(locale);
+      client.track("copy_code", { locale, source: "browser" });
+      client.track("open_nusuk", { locale, source: "creator" });
+      client.setConsent("denied");
+    }
+    expect(runtime.send).toHaveBeenCalledTimes(count);
+    expect(runtime.disable).toHaveBeenLastCalledWith("G-TEST123456", true);
+    expect(runtime.load).toHaveBeenCalledTimes(1);
+    client.setConsent("granted");
+    expect(runtime.disable).toHaveBeenLastCalledWith("G-TEST123456", false);
+    expect(runtime.load).toHaveBeenCalledTimes(1);
+  });
   it("allows browsing when tag loading or send is blocked", () => {
     const { client, runtime } = fixture();
     runtime.load.mockImplementation(() => { throw new Error("network"); });

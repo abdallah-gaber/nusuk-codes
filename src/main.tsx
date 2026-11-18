@@ -25,7 +25,8 @@ import { formatDate, formatSeason } from "./presentation";
 import { LocaleProvider, LanguageSelector, useLocale } from "./LocaleProvider";
 import { LocalizedError, type TranslationKey } from "./i18n";
 import { analytics, productionTracking, trackingEnvironment, sanitizedAnalyticsUrl } from "./analytics";
-import { AnalyticsPreferences } from "./AnalyticsPreferences";
+import { AnalyticsPreferences, AnalyticsPreferencesLink } from "./AnalyticsPreferences";
+import { copyText } from "./clipboard";
 import { shareWebsite, whatsappUrl } from "./sharing";
 
 function initialHistory() {
@@ -157,7 +158,7 @@ function App() {
   }
   async function copy(text: string, message: TranslationKey, source: "browser" | "search" | "creator" = "browser") {
     try {
-      await navigator.clipboard.writeText(text);
+      await copyText(text);
       analytics.track("copy_code", { locale: language, source });
       setNotice(message);
     } catch {
@@ -169,7 +170,7 @@ function App() {
     try {
       const method = await shareWebsite(language, t("brand"), t("shareText"), {
         share: typeof navigator.share === "function" ? (data) => navigator.share(data) : undefined,
-        copy: (url) => navigator.clipboard.writeText(url),
+        copy: copyText,
       });
       if (method === "clipboard") setNotice("siteCopied");
     } catch (e) {
@@ -229,6 +230,7 @@ function App() {
         <nav aria-label={t("navigation")}>
           <a href="#how">{t("howNav")}</a>
           <a href="#faq">{t("faqNav")}</a>
+          <AnalyticsPreferencesLink />
           <LanguageSelector />
           <button
             className="icon-button"
