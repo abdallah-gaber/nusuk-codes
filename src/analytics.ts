@@ -125,14 +125,18 @@ export function saveConsent(storage: Pick<Storage, "setItem">, consent: Consent)
   try { storage.setItem(CONSENT_KEY, consent); } catch { /* Session-only choice. */ }
 }
 declare global {
-  interface Window { dataLayer?: unknown[][]; gtag?: (...command: unknown[]) => void; }
+  interface Window { dataLayer?: unknown[]; gtag?: (...command: unknown[]) => void; }
+}
+export function sendGoogleCommand(...command: unknown[]) {
+  window.dataLayer ||= [];
+  // gtag.js dispatches Arguments objects as commands. Arrays are interpreted as
+  // data-layer method calls instead, silently dropping config/consent/events.
+  // eslint-disable-next-line prefer-rest-params -- Google requires Arguments, not a rest array.
+  window.gtag ||= function () { window.dataLayer!.push(arguments); };
+  window.gtag(...command);
 }
 const browserRuntime: Runtime = {
-  send(...command) {
-    window.dataLayer ||= [];
-    window.gtag ||= (...args) => { window.dataLayer!.push(args); };
-    window.gtag(...command);
-  },
+  send: sendGoogleCommand,
   load(id) {
     if (document.getElementById("nusuk-google-tag")) return;
     const script = document.createElement("script");
