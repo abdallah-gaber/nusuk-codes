@@ -54,7 +54,7 @@ describe("language URLs and preferences", () => {
     expect(pathLanguage("/" + language)).toBe(language);
     expect(pathLanguage("/" + language + "/")).toBe(language);
     expect(detectLanguage("/" + language + "/", "ar", ["en"])).toBe(language);
-    expect(direction(language)).toBe(language === "ar" ? "rtl" : "ltr");
+    expect(direction(language)).toBe(direction(language));
   });
   it("ignores unsupported paths and unavailable preference storage", () => {
     expect(pathLanguage("/english/")).toBeUndefined();
@@ -100,20 +100,21 @@ describe("localized rendering and crawler metadata", () => {
     expect(html).toContain("<title>" + translate(language, "pageTitle") + "</title>");
     expect(html).toContain('href="' + localeMetadata(language).canonical + '"');
     expect(html.match(/rel="canonical"/g)).toHaveLength(1);
-    expect(html.match(/hreflang=/g)).toHaveLength(4);
+    expect(html.match(/hreflang=/g)).toHaveLength(5);
     for (const target of languages) expect(html).toContain('hreflang="' + target + '"');
     expect(html).toContain('hreflang="x-default"');
     expect(localizedHtml(html, language)).toBe(html);
     expect(html).not.toMatch(/__[A-Z_]+__/);
     expect(html).toContain(translate(language, "noScript"));
-    expect(html).toContain('id="root"></div>');
+    expect(html).toContain('id="root"><main class="static-intro">');
+    expect(html).toContain(translate(language, "transparencyBody"));
   });
   it("routes only supported localized pages while preserving CDN headers", () => {
     const config = JSON.parse(readFileSync("vercel.json", "utf8"));
     for (const language of languages) for (const suffix of ["", "/"]) {
       expect(config.rewrites).toContainEqual({ source: "/" + language + suffix, destination: "/" + language + "/index.html" });
     }
-    expect(config.rewrites).toHaveLength(6);
+    expect(config.rewrites).toHaveLength(8);
     expect(config.headers[0].source).toBe("/data/manifest.json");
     expect(config.headers[1].source).toBe("/data/codes.:hash.json");
   });

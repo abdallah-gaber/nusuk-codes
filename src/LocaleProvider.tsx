@@ -4,6 +4,7 @@ import {
   readLanguage, saveLanguage, translate, type Language, type TranslationKey,
 } from "./i18n";
 import { applyLocaleMetadata } from "./localeMetadata";
+import { analytics } from "./analytics";
 
 function localeValue(language: Language) {
   return {
@@ -25,6 +26,7 @@ export function LocaleProvider({ children, initialLanguage }: { children: ReactN
   const explicitRoute = useRef(typeof location === "undefined" ? undefined : pathLanguage(location.pathname));
   const scrollPosition = useRef<number | null>(null);
   const value = useMemo(() => ({ ...localeValue(language), setLanguage(next: Language) {
+    analytics.track("language_change", { locale: next, previous_locale: language });
     scrollPosition.current = window.scrollY;
     try { saveLanguage(localStorage, next); } catch { /* Session choice still works. */ }
     window.history.pushState(null, "", languagePath(next, location.search, location.hash));

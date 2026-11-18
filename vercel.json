@@ -22,6 +22,8 @@
     {"source": "/en", "destination": "/en/index.html"},
     {"source": "/en/", "destination": "/en/index.html"},
     {"source": "/id", "destination": "/id/index.html"},
-    {"source": "/id/", "destination": "/id/index.html"}
+    {"source": "/id/", "destination": "/id/index.html"},
+    {"source": "/ur", "destination": "/ur/index.html"},
+    {"source": "/ur/", "destination": "/ur/index.html"}
   ]
 }

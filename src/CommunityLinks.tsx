@@ -1,10 +1,11 @@
 import { officialUrl } from "./core";
 import { useLocale } from "./LocaleProvider";
+import { analytics } from "./analytics";
 
 const CREATOR_CODE = "NG-dX626jFL";
 
 export function OfficialAppIntro() {
-  const { t } = useLocale();
+  const { t, language } = useLocale();
   return (
     <section className="app-intro" aria-labelledby="app-intro-heading">
       <div>
@@ -12,7 +13,7 @@ export function OfficialAppIntro() {
         <p>
           {t("officialIntroBody")}</p>
       </div>
-      <a className="secondary" href="https://services.nusuk.sa/app"
+      <a className="secondary" href="https://services.nusuk.sa/app" onClick={() => analytics.track("open_nusuk", { locale: language, source: "intro" })}
         target="_blank" rel="noopener noreferrer">
         {t("officialIntroAction")}<span aria-hidden="true">↗</span>
         <span className="sr-only"> {t("newWindow")}</span>
@@ -22,7 +23,7 @@ export function OfficialAppIntro() {
 }
 
 export function CreatorSupport({ onCopy }: { onCopy: (code: string) => void }) {
-  const { t } = useLocale();
+  const { t, language } = useLocale();
   return (
     <section className="creator-support" aria-labelledby="creator-support-heading">
       <h2 id="creator-support-heading">{t("creatorTitle")}</h2>
@@ -35,7 +36,7 @@ export function CreatorSupport({ onCopy }: { onCopy: (code: string) => void }) {
       <div className="support-actions">
         <button className="secondary" type="button" onClick={() => onCopy(CREATOR_CODE)}>
           {t("copyCode")}</button>
-        <a href={officialUrl(CREATOR_CODE)} target="_blank" rel="noopener noreferrer">
+        <a href={officialUrl(CREATOR_CODE)} onClick={() => analytics.track("open_nusuk", { locale: language, source: "creator" })} target="_blank" rel="noopener noreferrer">
           {t("creatorLink")}<span aria-hidden="true">↗</span>
           <span className="sr-only"> {t("newWindow")}</span>
         </a>

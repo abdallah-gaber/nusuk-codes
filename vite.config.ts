@@ -12,7 +12,7 @@ function languagePages(): Plugin {
     name: "static-language-pages",
     configResolved(config) { output = resolve(config.root, config.build.outDir); },
     transformIndexHtml(html, context) {
-      return localizedHtml(html, pathLanguage((context.originalUrl || context.path).split("?")[0]) || "ar");
+      return localizedHtml(html, pathLanguage((context.originalUrl || context.path).split("?")[0]) || "ar", process.env.VERCEL_ENV === "preview");
     },
     configurePreviewServer(server) {
       server.middlewares.use((request, _response, next) => {
@@ -28,9 +28,9 @@ function languagePages(): Plugin {
       for (const language of languages) {
         const folder = resolve(output, language);
         mkdirSync(folder, { recursive: true });
-        writeFileSync(resolve(folder, "index.html"), localizedHtml(String(index.source), language));
+        writeFileSync(resolve(folder, "index.html"), localizedHtml(String(index.source), language, process.env.VERCEL_ENV === "preview"));
       }
     },
   };
 }
-export default defineConfig({ plugins: [react(), tailwindcss(), languagePages()] });
+export default defineConfig({ define: { "import.meta.env.VITE_DEPLOYMENT_ENV": JSON.stringify(process.env.VERCEL_ENV || "") }, plugins: [react(), tailwindcss(), languagePages()] });

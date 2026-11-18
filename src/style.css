@@ -7,7 +7,7 @@
   --bg: #f7f7f0;
   --card: #fffefa;
   --ink: #203e36;
-  --muted: #64736a;
+  --muted: #5b695f;
   --border: #dfe3d8;
   --green: #185343;
   --pale: #edf1e7;
@@ -1132,3 +1132,52 @@ dialog .main-actions {
     justify-content: space-between;
   }
 }
+
+:root[lang="ur"] {
+  font-family: "Noto Naskh Arabic", "Noto Nastaliq Urdu", Tahoma, Arial, sans-serif;
+  line-height: 2;
+}
+:root[lang="ur"] h1,
+:root[lang="ur"] h2,
+:root[lang="ur"] h3 { line-height: 1.9; }
+.share-actions,
+.preference-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin-top: 12px;
+}
+.share-actions > a,
+.share-actions > button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.analytics-preferences {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  background: var(--card);
+  font-size: 12px;
+}
+.analytics-preferences p { margin-top: 10px; color: var(--muted); }
+.preference-actions { justify-content: flex-start; align-items: stretch; }
+.preference-actions > button { flex: 1 1 160px; }
+.header nav > a.privacy-link { display: inline-flex; align-items: center; min-height: 44px; }
+@media (max-width: 760px) {
+  .header nav { flex-wrap: wrap; }
+}
+.static-intro { max-width: 900px; padding: 24px; margin: auto; }
+.static-intro h2,
+.static-intro h3 { margin-top: 18px; }
+.static-intro p { margin: 10px 0; }
+.static-intro a { text-decoration: underline; }
+.static-intro li { margin: 12px 0; }
+.static-intro nav { padding: 20px 0; }
