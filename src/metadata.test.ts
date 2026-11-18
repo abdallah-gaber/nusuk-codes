@@ -29,7 +29,7 @@ describe("static crawler metadata", () => {
     const robots = readFileSync("public/robots.txt", "utf8");
     const sitemap = readFileSync("public/sitemap.xml", "utf8");
     expect(robots).toContain(`Sitemap: ${canonical}sitemap.xml`);
-    expect(sitemap.match(/<loc>/g)).toHaveLength(3);
+    expect(sitemap.match(/<loc>/g)).toHaveLength(4);
     expect(sitemap).toContain(`<loc>${canonical}ar/</loc>`);
     const schema = JSON.parse(html.match(/<script type="application\/ld\+json">\s*([\s\S]+?)\s*<\/script>/)![1]);
     expect(schema).toMatchObject({ "@type": "WebSite", url: canonical + "ar/", inLanguage: "ar" });

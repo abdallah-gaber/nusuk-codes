@@ -1,13 +1,14 @@
 import { ar, type TranslationKey } from "./locales/ar";
 import { en } from "./locales/en";
 import { id } from "./locales/id";
+import { ur } from "./locales/ur";
 
 export type { TranslationKey } from "./locales/ar";
-export const languages = ["ar", "en", "id"] as const;
+export const languages = ["ar", "en", "id", "ur"] as const;
 export type Language = typeof languages[number];
-export const dictionaries = { ar, en, id };
-export const languageNames = { ar: "العربية", en: "English", id: "Bahasa Indonesia" };
-export const locales = { ar: "ar-EG", en: "en", id: "id-ID" };
+export const dictionaries = { ar, en, id, ur };
+export const languageNames = { ar: "العربية", en: "English", id: "Bahasa Indonesia", ur: "اردو" };
+export const locales = { ar: "ar-EG", en: "en", id: "id-ID", ur: "ur-PK" };
 export const LANGUAGE_KEY = "nusuk:language:v1";
 export const SITE_URL = "https://nusuk.abdallahgaber.dev";
 
@@ -15,8 +16,8 @@ export function isLanguage(value: unknown): value is Language {
   return languages.some((language) => language === value);
 }
 export function pathLanguage(path: string): Language | undefined {
-  const match = /^\/(ar|en|id)\/?$/.exec(path);
-  return match ? match[1] as Language : undefined;
+  const match = /^\/([^/]+)\/?$/.exec(path);
+  return match && isLanguage(match[1]) ? match[1] : undefined;
 }
 export function detectLanguage(path: string, saved: unknown, preferred: readonly string[]): Language {
   const route = pathLanguage(path);
@@ -34,7 +35,7 @@ export function readLanguage(storage: Pick<Storage, "getItem">): string | null {
 export function saveLanguage(storage: Pick<Storage, "setItem">, language: Language) {
   try { storage.setItem(LANGUAGE_KEY, language); } catch { /* Session choice still works. */ }
 }
-export const direction = (language: Language) => language === "ar" ? "rtl" : "ltr";
+export const direction = (language: Language) => language === "ar" || language === "ur" ? "rtl" : "ltr";
 export function languagePath(language: Language, search = "", hash = "") {
   return `/${language}/${search}${hash}`;
 }

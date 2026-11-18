@@ -24,6 +24,9 @@ import { getProgress } from "./discovery";
 import { formatDate, formatSeason } from "./presentation";
 import { LocaleProvider, LanguageSelector, useLocale } from "./LocaleProvider";
 import { LocalizedError, type TranslationKey } from "./i18n";
+import { analytics, productionTracking, trackingEnvironment, sanitizedAnalyticsUrl } from "./analytics";
+import { AnalyticsPreferences } from "./AnalyticsPreferences";
+import { shareWebsite, whatsappUrl } from "./sharing";
 
 function initialHistory() {
   try {
@@ -40,6 +43,7 @@ function App() {
   const [error, setError] = useState<TranslationKey | "">("");
   const [loading, setLoading] = useState(true);
   const [undo, setUndo] = useState<History>();
+  const undoAction = useRef<"next" | "skipped" | "tried" | undefined>(undefined);
   const [notice, setNotice] = useState<TranslationKey | "">("");
   const [storageWarning, setStorageWarning] = useState(false);
   const [online, setOnline] = useState(navigator.onLine);
@@ -136,8 +140,12 @@ function App() {
     : (Math.min(progress.percentage, progress.remaining ? 99.9 : 100) / 100).toLocaleString(locale, { style: "percent", maximumFractionDigits: 1 });
   function advance(action: "next" | "skipped" | "tried") {
     setUndo(history);
+    undoAction.current = action;
     const next = moveForward(history, current, order, action);
     setHistory(next.history);
+    if (action === "tried") analytics.track("mark_tried", { locale: language });
+    else if (action === "skipped") analytics.track("skip_code", { locale: language });
+    else if (next.current) analytics.track("next_code", { locale: language });
     setNotice(
       action === "tried"
         ? "triedNotice"
@@ -147,22 +155,25 @@ function App() {
     );
     requestAnimationFrame(() => codeFocus.current?.focus());
   }
-  async function copy(text: string, message: TranslationKey) {
+  async function copy(text: string, message: TranslationKey, source: "browser" | "search" | "creator" = "browser") {
     try {
       await navigator.clipboard.writeText(text);
+      analytics.track("copy_code", { locale: language, source });
       setNotice(message);
     } catch {
       setNotice("copyFailed");
     }
   }
   async function share() {
-    const url = location.origin + `/${language}/`;
+    analytics.track("share_website", { locale: language, share_method: typeof navigator.share === "function" ? "native" : "clipboard" });
     try {
-      if (navigator.share) await navigator.share({ title: t("brand"), url });
-      else await copy(url, "siteCopied");
+      const method = await shareWebsite(language, t("brand"), t("shareText"), {
+        share: typeof navigator.share === "function" ? (data) => navigator.share(data) : undefined,
+        copy: (url) => navigator.clipboard.writeText(url),
+      });
+      if (method === "clipboard") setNotice("siteCopied");
     } catch (e) {
-      if ((e as Error).name !== "AbortError")
-        setNotice("shareFailed");
+      if ((e as Error).name !== "AbortError") setNotice("shareFailed");
     }
   }
   function exportHistory() {
@@ -175,6 +186,7 @@ function App() {
     a.href = url;
     a.download = `nusuk-history-${SEASON}.json`;
     a.click();
+    analytics.track("history_export", { locale: language });
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   async function importHistory(f?: File) {
@@ -190,6 +202,7 @@ function App() {
       }));
       setUndo(undefined);
       setNotice("historyImported");
+      analytics.track("history_import", { locale: language });
     } catch (e) {
       setNotice(e instanceof LocalizedError ? e.key : "invalidHistory");
     }
@@ -219,7 +232,7 @@ function App() {
           <LanguageSelector />
           <button
             className="icon-button"
-            aria-label={t("changeTheme")}
+            aria-label={`${t("changeTheme")}: ${t(theme === "system" ? "themeSystem" : theme === "dark" ? "themeDark" : "themeLight")}`}
             onClick={() =>
               setTheme(
                 theme === "system"
@@ -289,7 +302,7 @@ function App() {
                 <button className="primary" onClick={() => void reload()}>
                   {t("retry")}</button>
                 <a
-                  href="https://services.nusuk.sa/app"
+                  href={"https://services.nusuk.sa/app"} onClick={() => analytics.track("open_nusuk", { locale: language, source: "error" })}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -300,7 +313,7 @@ function App() {
                 <h2>{t("emptyCodes")}</h2>
                 <p>{t("emptyHelp")}</p>
                 <a
-                  href="https://services.nusuk.sa/app"
+                  href={"https://services.nusuk.sa/app"} onClick={() => analytics.track("open_nusuk", { locale: language, source: "empty" })}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -351,7 +364,7 @@ function App() {
                   {t("manualFlow")}</p>
                 <div className="official-action">
                   <a
-                    href={officialUrl(current)}
+                    href={officialUrl(current)} onClick={() => analytics.track("open_nusuk", { locale: language, source: "browser" })}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-describedby="official-link-help"
@@ -369,6 +382,8 @@ function App() {
                 disabled={!undo}
                 onClick={() => {
                   if (undo) {
+                    if (undoAction.current === "tried") analytics.track("undo_tried", { locale: language });
+                    undoAction.current = undefined;
                     setHistory(undo);
                     setUndo(undefined);
                     setNotice("undoNotice");
@@ -431,7 +446,7 @@ function App() {
           </aside>
         </section>
         <CodeList entries={feed?.codes || []} history={history} loading={loading} error={!!error}
-          onCopy={(code) => void copy(code, "listCopied")} />
+          onCopy={(code) => void copy(code, "listCopied", "search")} />
         <div className="freshness">
           <span>
             ◷ {feed?.cached ? t("cachedDate") : t("releaseDate")}:{" "}
@@ -528,14 +543,16 @@ function App() {
           <p>{t("officialTerms")}</p>
           <a
             className="primary"
-            href="https://services.nusuk.sa/app"
+            href={"https://services.nusuk.sa/app"} onClick={() => analytics.track("open_nusuk", { locale: language, source: "footer" })}
             target="_blank"
             rel="noopener noreferrer"
           >
             {t("openOfficial")}</a>
-          <button onClick={() => void share()}>{t("shareSite")}</button>
+          <div className="share-actions"><button onClick={() => void share()}>{t("shareSite")}</button>
+          <a href={whatsappUrl(language, t("shareText"))} target="_blank" rel="noopener noreferrer" onClick={() => analytics.track("share_website", { locale: language, share_method: "whatsapp" })}>{t("shareWhatsApp")} <span className="sr-only">{t("newWindow")}</span></a></div>
         </section>
-        <CreatorSupport onCopy={(code) => void copy(code, "creatorCopied")} />
+        <CreatorSupport onCopy={(code) => void copy(code, "creatorCopied", "creator")} />
+        <AnalyticsPreferences />
       </main>
       <footer>
         <a className="brand" href="#">
@@ -583,7 +600,7 @@ createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <LocaleProvider>
       <App />
-      {import.meta.env.PROD && <Analytics />}
+      {productionTracking(trackingEnvironment) && <Analytics beforeSend={(event) => ({ ...event, url: sanitizedAnalyticsUrl(event.url) })} />}
     </LocaleProvider>
   </React.StrictMode>,
 );

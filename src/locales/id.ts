@@ -177,5 +177,15 @@ export const id = {
   "socialTitle": "Pusat Kode Nusuk · Dari komunitas, untuk komunitas",
   "socialDescription": "Jelajahi, cari, dan salin kode komunitas dengan progres tersimpan di browser. Tidak berafiliasi dengan Nusuk; kode belum diverifikasi.",
   "imageAlt": "Gambar Pusat Kode Nusuk dalam bahasa Arab. Jelajahi, cari, dan pantau kode komunitas. Proyek independen; kode belum diverifikasi.",
-  "noScript": "Pusat Kode Nusuk adalah proyek independen untuk kode komunitas yang belum diverifikasi. Aktifkan JavaScript untuk menjelajah, mencari, dan menyimpan progres lokal. Keberhasilan penukaran dan kelayakan tidak dijamin."
+  "noScript": "Pusat Kode Nusuk adalah proyek independen untuk kode komunitas yang belum diverifikasi. Aktifkan JavaScript untuk menjelajah, mencari, dan menyimpan progres lokal. Keberhasilan penukaran dan kelayakan tidak dijamin.",
+  "analyticsTitle": "Analitik dan privasi",
+  "analyticsDisclosure": "Peristiwa analitik kami tidak mengirim kode atau riwayat Anda. Vercel mengukur tampilan halaman secara terpisah. Google Analytics bersifat opsional. Dengan persetujuan, layanan ini menerima data teknis dan menggunakan cookie sesi untuk mengukur interaksi. Persetujuan dapat ditarik di sini kapan saja.",
+  "analyticsChoice": "Izinkan Google Analytics opsional? Situs tetap dapat digunakan tanpa persetujuan.",
+  "analyticsGranted": "Google Analytics aktif dengan persetujuan Anda.",
+  "analyticsDenied": "Google Analytics dinonaktifkan.",
+  "analyticsAccept": "Izinkan analitik",
+  "analyticsReject": "Tolak atau tarik persetujuan",
+  "analyticsUnavailable": "Google Analytics tidak diaktifkan pada versi situs ini.",
+  "shareText": "Jelajahi dan cari kode Nusuk dari komunitas, lalu pantau progres secara lokal. Proyek independen; kode belum diverifikasi.",
+  "shareWhatsApp": "Bagikan lewat WhatsApp ↗"
 } satisfies Translations;

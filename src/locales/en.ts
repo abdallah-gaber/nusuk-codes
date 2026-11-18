@@ -177,5 +177,15 @@ export const en = {
   "socialTitle": "Nusuk Codes Hub · From the community, for the community",
   "socialDescription": "Browse, search and copy community codes, with progress saved in your browser. Independent of Nusuk; codes are unverified.",
   "imageAlt": "Arabic Nusuk Codes Hub artwork. Browse, search and track community codes. Independent project; codes are unverified.",
-  "noScript": "Nusuk Codes Hub is an independent project for unverified community codes. Enable JavaScript to browse, search and save progress locally. Redemption and eligibility are not guaranteed."
+  "noScript": "Nusuk Codes Hub is an independent project for unverified community codes. Enable JavaScript to browse, search and save progress locally. Redemption and eligibility are not guaranteed.",
+  "analyticsTitle": "Analytics and privacy",
+  "analyticsDisclosure": "Our analytics events do not send codes or your history. Vercel measures page views separately. Google Analytics is optional. With consent, it receives technical data and uses session cookies to measure interactions. You can withdraw consent here at any time.",
+  "analyticsChoice": "Allow optional Google Analytics? Browsing works without consent.",
+  "analyticsGranted": "Google Analytics is enabled with your consent.",
+  "analyticsDenied": "Google Analytics is disabled.",
+  "analyticsAccept": "Allow analytics",
+  "analyticsReject": "Decline or withdraw consent",
+  "analyticsUnavailable": "Google Analytics is not enabled on this deployment.",
+  "shareText": "Browse and search community Nusuk codes and track progress locally. Independent project; codes are unverified.",
+  "shareWhatsApp": "Share on WhatsApp ↗"
 } satisfies Translations;

@@ -1,4 +1,4 @@
-import { direction, languages, SITE_URL, translate, type Language } from "./i18n";
+import { direction, languages, languageNames, SITE_URL, translate, type Language } from "./i18n";
 
 export function localeMetadata(language: Language) {
   const t = (key: Parameters<typeof translate>[1]) => translate(language, key);
@@ -7,7 +7,7 @@ export function localeMetadata(language: Language) {
     title: t("pageTitle"), canonical,
     meta: {
       description: t("pageDescription"),
-      "og:locale": { ar: "ar_EG", en: "en_US", id: "id_ID" }[language],
+      "og:locale": { ar: "ar_EG", en: "en_US", id: "id_ID", ur: "ur_PK" }[language],
       "og:site_name": t("brand"),
       "og:title": t("socialTitle"),
       "og:description": t("socialDescription"),
@@ -38,7 +38,23 @@ export function applyLocaleMetadata(language: Language, page: Document) {
 }
 
 const escapeHtml = (value: string) => value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
-export function localizedHtml(html: string, language: Language): string {
+export function staticIntroduction(language: Language) {
+  const t = (key: Parameters<typeof translate>[1]) => escapeHtml(translate(language, key));
+  const steps = [1, 2, 3].map((number) => {
+    const title = ("step" + number + "Title") as Parameters<typeof translate>[1];
+    const body = ("step" + number + "Body") as Parameters<typeof translate>[1];
+    return "<li><h3>" + t(title) + "</h3><p>" + t(body) + "</p></li>";
+  }).join("");
+  const links = languages.map((locale) => '<a href="/' + locale + '/" lang="' + locale + '">' +
+    escapeHtml(languageNames[locale]) + "</a>").join(" · ");
+  return '<main class="static-intro"><h1>' + t("brand") + "</h1><p>" + t("pageDescription") +
+    "</p><h2>" + t("officialIntroTitle") + "</h2><p>" + t("officialIntroBody") +
+    '</p><a href="https://services.nusuk.sa/app" rel="noopener noreferrer">' + t("officialIntroAction") +
+    "</a><h2>" + t("howTitle") + "</h2><ol>" + steps + "</ol><h2>" + t("transparencyTitle") +
+    "</h2><p>" + t("transparencyBody") + "</p><p>" + t("footerDisclaimer") +
+    '</p><nav aria-label="' + t("language") + '">' + links + "</nav></main>";
+}
+export function localizedHtml(html: string, language: Language, preview = false): string {
   const metadata = localeMetadata(language);
   let result = html.replace(/<html[^>]*>/, `<html lang="${language}" dir="${direction(language)}">`)
     .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(metadata.title)}</title>`)
@@ -56,5 +72,9 @@ export function localizedHtml(html: string, language: Language): string {
   const alternates = [...languages.map((lang) =>
     `    <link rel="alternate" hreflang="${lang}" href="${SITE_URL}/${lang}/" />`),
     `    <link rel="alternate" hreflang="x-default" href="${SITE_URL}/" />`].join("\n");
+  result = result.replace(/<div id="root">[\s\S]*?<\/div>/,
+    '<div id="root">' + staticIntroduction(language) + "</div>");
+  result = result.replace(/\s*<meta name="robots" content="noindex, nofollow"\s*\/>/g, "");
+  if (preview) result = result.replace("</head>", '<meta name="robots" content="noindex, nofollow" />\n</head>');
   return result.replace("</head>", alternates + "\n  </head>");
 }
