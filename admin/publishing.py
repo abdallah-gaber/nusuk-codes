@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 
 from .model import (
     HISHAM_SOURCE_HOST,
+    INSTAGRAM_SOURCE_HOST,
     MAX_PUBLICATION_RECORDS,
     SEASON,
     VERIFICATION,
@@ -91,6 +92,7 @@ def checked_pair(manifest, raw):
                 "services.nusuk.sa",
                 "script.google.com",
                 HISHAM_SOURCE_HOST,
+                INSTAGRAM_SOURCE_HOST.removeprefix("www."),
             }
             or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", entry["observedAt"])
         ):

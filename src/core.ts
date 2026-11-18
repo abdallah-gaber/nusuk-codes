@@ -159,6 +159,7 @@ export async function verifySnapshot(
         c.status === "community_submitted_unverified" &&
         [
           "facebook.com",
+          "instagram.com",
           "services.nusuk.sa",
           "script.google.com",
           "hisham-nusuk.hisham-nusuk.workers.dev",

@@ -15,6 +15,7 @@ COMMUNITY_POLICY = "community-current-season-v1"
 MAX_PUBLICATION_RECORDS = 15_000
 HISHAM_SOURCE_HOST = "hisham-nusuk.hisham-nusuk.workers.dev"
 HISHAM_SOURCE_URL = f"https://{HISHAM_SOURCE_HOST}/codes.json"
+INSTAGRAM_SOURCE_HOST = "www.instagram.com"
 MAX_ROWS = 10000
 MAX_BYTES = 5_000_000
 
@@ -58,8 +59,15 @@ def safe_source(value):
             "services.nusuk.sa",
             "script.google.com",
             HISHAM_SOURCE_HOST,
+            INSTAGRAM_SOURCE_HOST,
         }
         or (url.hostname == HISHAM_SOURCE_HOST and value != HISHAM_SOURCE_URL)
+        or (
+            url.hostname == INSTAGRAM_SOURCE_HOST
+            and not re.fullmatch(
+                r"https://www\.instagram\.com/p/[A-Za-z0-9_-]{1,64}/", value
+            )
+        )
         or url.username
         or url.password
         or url.port not in (None, 443)
