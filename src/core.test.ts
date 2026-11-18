@@ -22,6 +22,24 @@ const manifest = JSON.parse(
 const raw = readFileSync(`public${manifest.snapshotUrl}`, "utf8");
 afterEach(() => vi.unstubAllGlobals());
 describe("candidate snapshot integrity", () => {
+  it("accepts the Instagram source domain with integrity checks and rejects private URLs", async () => {
+    const data = { schemaVersion: 1, season: SEASON, codes: [{
+      code: "NG-dX626jFL", status: "community_submitted_unverified",
+      source: "instagram.com", observedAt: "2026-11-18",
+    }] };
+    async function checked(source: string) {
+      const body = JSON.stringify({ ...data, codes: [{ ...data.codes[0], source }] });
+      const hash = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(body))))
+        .map(value => value.toString(16).padStart(2, "0")).join("");
+      const candidate = { ...manifest, codeCount: 1, snapshotSha256: hash,
+        snapshotUrl: "/data/codes." + hash.slice(0, 16) + ".json" };
+      validateManifest(candidate);
+      return verifySnapshot(candidate, body);
+    }
+    expect((await checked("instagram.com"))[0].code).toBe("NG-dX626jFL");
+    await expect(checked("https://www.instagram.com/p/DfXT6fmNOND/")).rejects.toThrow();
+    await expect(checked("instagram.com.evil.example")).rejects.toThrow();
+  });
   it("preserves all exact-case candidates and contains no verified status", async () => {
     const codes = await verifySnapshot(manifest, raw);
     expect(codes).toHaveLength(1132);
