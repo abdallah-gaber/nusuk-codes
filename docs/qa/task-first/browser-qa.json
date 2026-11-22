@@ -1,0 +1,775 @@
+{
+  "kind": "Real Chrome UI; privately intercepted local production artifact; Google script blocked",
+  "checks": [
+    "40 locale/theme/viewport layouts, first-viewport primary controls, inline consent, equal 44px choices and unobscured focus",
+    "Accept/decline, saved-choice reload, single initialization, cross-tab withdrawal and explicit reset",
+    "Blocked localStorage: session reload persistence and native BroadcastChannel cross-tab withdrawal",
+    "Both stores blocked: non-forcing memory choice; prompt returns on reload only",
+    "All four locales at 320 × 568 and 200% text: no horizontal scrolling, first-viewport primary actions and reachable consent",
+    "Zero axe violations in each locale, light and dark",
+    "Keyboard entry, clipboard, exact official link, Next persistence, Tried/Skip/Undo, history export/import/reset and search",
+    "Consent-gated viewport impression and locale deduplication, three discovery events, successful share only and payload privacy"
+  ],
+  "viewports": [
+    {
+      "locale": "en",
+      "theme": "light",
+      "width": 320,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 130.203125,
+          "height": 44
+        },
+        {
+          "width": 130.203125,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "en",
+      "theme": "light",
+      "width": 360,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 148.609375,
+          "height": 44
+        },
+        {
+          "width": 148.609375,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "en",
+      "theme": "light",
+      "width": 390,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 162.40625,
+          "height": 44
+        },
+        {
+          "width": 162.40625,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "en",
+      "theme": "light",
+      "width": 412,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 172.53125,
+          "height": 44
+        },
+        {
+          "width": 172.53125,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "en",
+      "theme": "light",
+      "width": 1280,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 127.65625,
+          "height": 70.1875
+        },
+        {
+          "width": 127.671875,
+          "height": 70.1875
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "en",
+      "theme": "dark",
+      "width": 320,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 130.203125,
+          "height": 44
+        },
+        {
+          "width": 130.203125,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "en",
+      "theme": "dark",
+      "width": 360,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 148.609375,
+          "height": 44
+        },
+        {
+          "width": 148.609375,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "en",
+      "theme": "dark",
+      "width": 390,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 162.40625,
+          "height": 44
+        },
+        {
+          "width": 162.40625,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "en",
+      "theme": "dark",
+      "width": 412,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 172.53125,
+          "height": 44
+        },
+        {
+          "width": 172.53125,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "en",
+      "theme": "dark",
+      "width": 1280,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 127.65625,
+          "height": 70.1875
+        },
+        {
+          "width": 127.671875,
+          "height": 70.1875
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ar",
+      "theme": "light",
+      "width": 320,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 130.203125,
+          "height": 44
+        },
+        {
+          "width": 130.203125,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ar",
+      "theme": "light",
+      "width": 360,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 148.609375,
+          "height": 44
+        },
+        {
+          "width": 148.609375,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ar",
+      "theme": "light",
+      "width": 390,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 162.40625,
+          "height": 44
+        },
+        {
+          "width": 162.40625,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ar",
+      "theme": "light",
+      "width": 412,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 172.53125,
+          "height": 44
+        },
+        {
+          "width": 172.53125,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ar",
+      "theme": "light",
+      "width": 1280,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 127.65625,
+          "height": 70.1875
+        },
+        {
+          "width": 127.671875,
+          "height": 70.1875
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ar",
+      "theme": "dark",
+      "width": 320,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 130.203125,
+          "height": 44
+        },
+        {
+          "width": 130.203125,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ar",
+      "theme": "dark",
+      "width": 360,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 148.609375,
+          "height": 44
+        },
+        {
+          "width": 148.609375,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ar",
+      "theme": "dark",
+      "width": 390,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 162.40625,
+          "height": 44
+        },
+        {
+          "width": 162.40625,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ar",
+      "theme": "dark",
+      "width": 412,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 172.53125,
+          "height": 44
+        },
+        {
+          "width": 172.53125,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ar",
+      "theme": "dark",
+      "width": 1280,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 127.65625,
+          "height": 70.1875
+        },
+        {
+          "width": 127.671875,
+          "height": 70.1875
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "id",
+      "theme": "light",
+      "width": 320,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 130.203125,
+          "height": 44
+        },
+        {
+          "width": 130.203125,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "id",
+      "theme": "light",
+      "width": 360,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 148.609375,
+          "height": 44
+        },
+        {
+          "width": 148.609375,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "id",
+      "theme": "light",
+      "width": 390,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 162.40625,
+          "height": 44
+        },
+        {
+          "width": 162.40625,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "id",
+      "theme": "light",
+      "width": 412,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 172.53125,
+          "height": 44
+        },
+        {
+          "width": 172.53125,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "id",
+      "theme": "light",
+      "width": 1280,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 127.65625,
+          "height": 70.1875
+        },
+        {
+          "width": 127.671875,
+          "height": 70.1875
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "id",
+      "theme": "dark",
+      "width": 320,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 130.203125,
+          "height": 44
+        },
+        {
+          "width": 130.203125,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "id",
+      "theme": "dark",
+      "width": 360,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 148.609375,
+          "height": 44
+        },
+        {
+          "width": 148.609375,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "id",
+      "theme": "dark",
+      "width": 390,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 162.40625,
+          "height": 44
+        },
+        {
+          "width": 162.40625,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "id",
+      "theme": "dark",
+      "width": 412,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 172.53125,
+          "height": 44
+        },
+        {
+          "width": 172.53125,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "id",
+      "theme": "dark",
+      "width": 1280,
+      "overflow": false,
+      "dir": "ltr",
+      "actions": [
+        {
+          "width": 127.65625,
+          "height": 70.1875
+        },
+        {
+          "width": 127.671875,
+          "height": 70.1875
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ur",
+      "theme": "light",
+      "width": 320,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 130.203125,
+          "height": 44
+        },
+        {
+          "width": 130.203125,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ur",
+      "theme": "light",
+      "width": 360,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 148.609375,
+          "height": 44
+        },
+        {
+          "width": 148.609375,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ur",
+      "theme": "light",
+      "width": 390,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 162.40625,
+          "height": 44
+        },
+        {
+          "width": 162.40625,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ur",
+      "theme": "light",
+      "width": 412,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 172.53125,
+          "height": 44
+        },
+        {
+          "width": 172.53125,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ur",
+      "theme": "light",
+      "width": 1280,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 127.65625,
+          "height": 74.984375
+        },
+        {
+          "width": 127.671875,
+          "height": 74.984375
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ur",
+      "theme": "dark",
+      "width": 320,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 130.203125,
+          "height": 44
+        },
+        {
+          "width": 130.203125,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ur",
+      "theme": "dark",
+      "width": 360,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 148.609375,
+          "height": 44
+        },
+        {
+          "width": 148.609375,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ur",
+      "theme": "dark",
+      "width": 390,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 162.40625,
+          "height": 44
+        },
+        {
+          "width": 162.40625,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ur",
+      "theme": "dark",
+      "width": 412,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 172.53125,
+          "height": 44
+        },
+        {
+          "width": 172.53125,
+          "height": 44
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    },
+    {
+      "locale": "ur",
+      "theme": "dark",
+      "width": 1280,
+      "overflow": false,
+      "dir": "rtl",
+      "actions": [
+        {
+          "width": 127.65625,
+          "height": 74.984375
+        },
+        {
+          "width": 127.671875,
+          "height": 74.984375
+        }
+      ],
+      "primaryVisible": true,
+      "bannerFollowsBrowser": true
+    }
+  ]
+}

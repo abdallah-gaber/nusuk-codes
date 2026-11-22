@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { Entry, History } from "./core";
 import { filterCodes, type CodeFilter } from "./discovery";
 import { useLocale } from "./LocaleProvider";
+import { analytics } from "./analytics";
 
 const PAGE_SIZE = 24;
 
@@ -13,7 +14,7 @@ export function CodeList({ entries, history, loading, error, onCopy }: {
   error: boolean;
   onCopy: (code: string) => void;
 }) {
-  const { t, n } = useLocale();
+  const { t, n, language } = useLocale();
   const FILTERS: { value: CodeFilter; label: string }[] = [
     { value: "all", label: t("all") },
     { value: "unseen", label: t("unseen") },
@@ -37,11 +38,12 @@ export function CodeList({ entries, history, loading, error, onCopy }: {
           : t("noneSkipped");
 
   return (
-    <details className="code-list" onToggle={(event) => setOpen(event.currentTarget.open)}>
-      <summary>
-        <span className="code-list-title">{t("searchTitle")}</span>
-        <span className="code-list-subtitle">{t("searchSubtitle")}</span>
-      </summary>
+    <details className="code-list" onToggle={(event) => {
+      const isOpen = event.currentTarget.open;
+      setOpen(isOpen);
+      if (isOpen) analytics.track("secondary_feature_open", { locale: language, feature: "search" });
+    }}>
+      <summary><strong>{t("searchTitle")}</strong></summary>
       {open && <div className="code-list-panel">
         <div role="search">
           <label htmlFor="code-search">{t("searchLabel")}</label>
@@ -74,7 +76,6 @@ export function CodeList({ entries, history, loading, error, onCopy }: {
         {!loading && !error && matches.length > limit && <button className="load-more secondary"
           onClick={() => setLimit((value) => value + PAGE_SIZE)} aria-controls="code-results">
           {t("loadMore", { count: n(Math.min(PAGE_SIZE, matches.length - limit)) })}</button>}
-        <p className="code-list-disclaimer">{t("listDisclaimer")}</p>
       </div>}
     </details>
   );

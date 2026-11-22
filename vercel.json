@@ -1,4 +1,7 @@
 {
+  "git": {
+    "deploymentEnabled": { "ux/mobile-task-first": false }
+  },
   "headers": [
     {
       "source": "/data/manifest.json",

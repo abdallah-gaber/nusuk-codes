@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useLocale } from "./LocaleProvider";
 import { analytics, CONSENT_KEY, type Consent } from "./analytics";
 import { loadConsent, persistConsent, saveSessionConsent, storageConsent, syncSessionConsent } from "./consentStorage";
-import { ConsentBanner } from "./ConsentBanner";
 
 export function AnalyticsPreferencesLink() {
   const { t } = useLocale();
@@ -14,11 +13,11 @@ export function AnalyticsPreferencesLink() {
       preferences.querySelector("summary")?.focus();
       preferences.scrollIntoView({ block: "start" });
     }
-  }}>{t("analyticsTitle")}</a>;
+  }}>{t("privacyNav")}</a>;
 }
 
-export function AnalyticsPreferences() {
-  const { t, language } = useLocale();
+export function useAnalyticsConsent() {
+  const { language } = useLocale();
   const [consent, setConsent] = useState<Consent | undefined>(() => loadConsent());
   const channel = useRef<BroadcastChannel | undefined>(undefined);
   useEffect(() => {
@@ -59,19 +58,24 @@ export function AnalyticsPreferences() {
     setConsent(value);
     try { channel.current?.postMessage(value); } catch { /* No effect on local choice. */ }
   }
+  return { consent, choose };
+}
+
+export function AnalyticsPreferences({ consent, onChoose }: {
+  consent: Consent | undefined; onChoose: (value: Consent) => void;
+}) {
+  const { t } = useLocale();
   return (
-    <><details id="analytics-preferences" className="analytics-preferences">
+    <details id="analytics-preferences" className="analytics-preferences">
       <summary>{t("analyticsTitle")}</summary>
       <p>{t("analyticsDisclosure")}</p>
       {analytics.eligible ? <>
         <p role="status">{t(consent === "granted" ? "analyticsGranted" : consent === "denied" ? "analyticsDenied" : "analyticsChoice")}</p>
         <div className="preference-actions">
-          <button type="button" className="secondary" onClick={() => choose("granted")}>{t("analyticsAccept")}</button>
-          <button type="button" className="secondary" onClick={() => choose("denied")}>{t("analyticsReject")}</button>
+          <button type="button" className="secondary" onClick={() => onChoose("granted")}>{t("analyticsAccept")}</button>
+          <button type="button" className="secondary" onClick={() => onChoose("denied")}>{t("analyticsReject")}</button>
         </div>
       </> : <p>{t("analyticsUnavailable")}</p>}
     </details>
-    {analytics.eligible && !consent && <ConsentBanner onChoose={choose} />}
-    </>
   );
 }

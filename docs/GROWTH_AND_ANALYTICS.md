@@ -56,10 +56,13 @@ Bengali and Hindi are deliberately not selectable/indexable. To release either: 
 
 ## GA4 event catalog
 
-All events require eligible production configuration and granted consent.
+All events require eligible production configuration and granted consent. This matrix reflects the [task-first UI revision](TASK_FIRST_UX.md).
 
 | Event | Trigger and meaning | Parameters beyond locale |
 | --- | --- | --- |
+| page_view | Manual page view on consent grant or locale transition, deduplicated for the same active locale | Sanitized page location, title, origin-only referrer |
+| code_browser_view | Code, Copy and Next fully intersect the viewport in a foreground tab, once per locale per document | — |
+| secondary_feature_open | Search, progress or help opens. Closing sends no event | feature |
 | copy_code | Clipboard write resolves successfully; browser/search/creator | source |
 | next_code | Next selects another unseen code | — |
 | skip_code | User records Skipped | — |
@@ -67,11 +70,11 @@ All events require eligible production configuration and granted consent.
 | undo_tried | Undo reverses a Tried action in the current session | — |
 | open_nusuk | Click on official, current-code or creator invitation link; not proof the app opened | source |
 | language_change | Manual selector change, not automatic detection/back navigation | previous_locale |
-| share_website | User initiates native/copy/WhatsApp sharing; includes canceled native sheets | share_method |
+| share_website | Native share resolves or website URL clipboard write succeeds. The browser cannot observe WhatsApp delivery | share_method |
 | history_export | Valid history serialized and browser download initiated; saving cannot be observed | — |
 | history_import | History parses successfully and is accepted for local merging | — |
 
-Allowed locale values: ar, en, id, ur. Sources: browser, search, creator, intro, footer, error, empty; copy_code accepts only browser/search/creator. Search has no outbound-link action. Share methods: native, clipboard, whatsapp. Native failures may fall back to clipboard; the event describes the initial method, not confirmed delivery.
+Allowed locale values: ar, en, id, ur. Sources: browser, search, creator, intro, footer, error, empty; copy_code accepts only browser/search/creator. Search has no outbound-link action. Share methods are native and clipboard. A successful fallback records clipboard. The native promise signals platform handoff, which varies by operating system. The feature allowlist is search, progress and help. No browser impression or discovery event is replayed from before consent.
 
 The runtime drops unknown payload properties and rejects invalid enum values/events. No code, clipboard data, history contents, seed, user ID, name, email, phone, filename or arbitrary action text is sent. History import/export events contain no record counts or data.
 
@@ -106,11 +109,11 @@ See [Google localized-version guidance](https://developers.google.com/search/doc
 1. Create/use a standard free GA4 property and web stream for https://nusuk.abdallahgaber.dev. Do not enable paid Analytics 360, BigQuery billing integrations or Google Signals.
 2. Disable the web stream's entire Enhanced Measurement feature, including automatic page/history changes, scroll, outbound clicks, form and download collection. This is essential: automatic outbound URLs could otherwise include Nusuk codes, and automatic page views could duplicate ours.
 3. Set the public measurement ID and VITE_GA_MANUAL_EVENTS_ONLY=true in Vercel's Production environment only. Do not activate these until the repository change and release are approved.
-4. After release, first decline: confirm no googletagmanager.com tag request. Use the visible “Analytics and privacy” header link (including mobile) to open the inline preferences near the footer. Grant there: confirm one tag load, one page_view, canonical page_location and no code/query/hash values in collected parameters. Switch language once and verify one additional page view.
-5. Use GA Realtime to inspect the ten events during deliberate interactions. For DebugView, use Google's supported Tag Assistant/Analytics debugging tooling on the owner test session; the app does not enable debug_mode for every visitor. Remove debugging afterward and exclude developer/internal traffic.
-6. Test all three copy sources, Next, Tried → Undo, Skip, official/invitation links, manual language change, share initiation and valid history import/export. Inspect requests and page context, not just event names. Reject invalid imports and verify no import event.
+4. After release, first decline: confirm no googletagmanager.com tag request. Use the visible “Privacy” header link (including mobile) to open the inline preferences near the footer. Grant there: confirm one tag load, one page_view, canonical page_location and no code/query/hash values in collected parameters. Switch language once and verify one additional page view.
+5. Use GA Realtime to inspect the events in the matrix during deliberate interactions. For DebugView, use Google's supported Tag Assistant/Analytics debugging tooling on the owner test session; the app does not enable debug_mode for every visitor. Remove debugging afterward and exclude developer/internal traffic.
+6. Test all three copy sources, Next, Tried → Undo, Skip, official/invitation links, manual language change, native share completion and clipboard fallback and valid history import/export. Inspect requests and page context, not just event names. Reject invalid imports and verify no import event.
 7. Withdraw consent, check the opt-out flag, cookie removal and absence of subsequent manual events; test cross-tab withdrawal. Repeat with storage blocked, a tag blocker and Facebook/in-app browsers. Regrant should not reload a second tag or double-send page_view.
-8. Register event-scoped custom dimensions locale, previous_locale, source and share_method if needed. Recommend copy_code and open_nusuk as optional key events: they measure successful clipboard writes and outbound intent, never keys/rewards/redemption.
+8. Register event-scoped custom dimensions locale, previous_locale, source, share_method and feature if needed. Recommend copy_code and open_nusuk as optional key events: they measure successful clipboard writes and outbound intent, never keys/rewards/redemption.
 
 Use [manual page views](https://developers.google.com/analytics/devguides/collection/ga4/views), [consent guidance](https://developers.google.com/tag-platform/security/guides/consent), [cookie controls](https://developers.google.com/tag-platform/security/guides/customize-cookies) and [privacy controls](https://developers.google.com/tag-platform/security/guides/privacy). Realtime/DebugView verification with a real property is an owner follow-up, not a completed test.
 
