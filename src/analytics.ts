@@ -13,7 +13,9 @@ export type AnalyticsEvents = {
   undo_tried: Base;
   open_nusuk: Base & { source: Source };
   language_change: Base & { previous_locale: Language };
-  share_website: Base & { share_method: "native" | "clipboard" | "whatsapp" };
+  share_website: Base & { share_method: "native" | "clipboard" };
+  code_browser_view: Base;
+  secondary_feature_open: Base & { feature: "search" | "progress" | "help" };
   history_export: Base;
   history_import: Base;
 };
@@ -25,13 +27,15 @@ export function productionTracking(env: TrackingEnvironment) {
 const fields = {
   locale: languages, previous_locale: languages,
   source: ["browser", "search", "creator", "intro", "footer", "error", "empty"],
-  share_method: ["native", "clipboard", "whatsapp"],
+  share_method: ["native", "clipboard"],
+  feature: ["search", "progress", "help"],
 } as const;
 const eventFields: Record<keyof AnalyticsEvents, readonly (keyof typeof fields)[]> = {
   copy_code: ["locale", "source"], next_code: ["locale"], skip_code: ["locale"],
   mark_tried: ["locale"], undo_tried: ["locale"], open_nusuk: ["locale", "source"],
   language_change: ["locale", "previous_locale"], share_website: ["locale", "share_method"],
   history_export: ["locale"], history_import: ["locale"],
+  code_browser_view: ["locale"], secondary_feature_open: ["locale", "feature"],
 };
 export function eventPayload(name: keyof AnalyticsEvents, input: object): Record<string, string> | undefined {
   if (!Object.hasOwn(eventFields, name)) return;

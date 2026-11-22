@@ -26,7 +26,7 @@ describe("translation coverage", () => {
     }
   });
   it("keeps all Arabic UI text in the dictionaries", () => {
-    for (const file of ["main.tsx", "CodeList.tsx", "TipsTicker.tsx", "CommunityLinks.tsx", "presentation.ts", "core.ts"]) {
+    for (const file of ["main.tsx", "CodeList.tsx", "ConsentBanner.tsx", "AnalyticsPreferences.tsx", "CommunityLinks.tsx", "presentation.ts", "core.ts"]) {
       expect(readFileSync("src/" + file, "utf8"), file).not.toMatch(/[\u0600-\u06ff]/);
     }
   });

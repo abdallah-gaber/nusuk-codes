@@ -100,23 +100,26 @@ describe("bounded non-sensitive events", () => {
     copy_code: { locale: "en", source: "browser" }, next_code: { locale: "en" },
     skip_code: { locale: "en" }, mark_tried: { locale: "en" }, undo_tried: { locale: "en" },
     open_nusuk: { locale: "en", source: "intro" }, language_change: { locale: "ur", previous_locale: "en" },
-    share_website: { locale: "en", share_method: "whatsapp" }, history_export: { locale: "en" },
-    history_import: { locale: "en" },
+    share_website: { locale: "en", share_method: "clipboard" }, history_export: { locale: "en" },
+    history_import: { locale: "en" }, code_browser_view: { locale: "en" },
+    secondary_feature_open: { locale: "en", feature: "help" },
   };
   it("strips query strings, fragments and preview hosts from Vercel page URLs", () => {
     expect(sanitizedAnalyticsUrl("https://branch.vercel.app/ur/?code=NG-dX626jFL#private"))
       .toBe("https://nusuk.abdallahgaber.dev/ur/");
   });
-  it("accepts the ten documented events and strips every unexpected payload field", () => {
+  it("accepts the documented events and strips every unexpected payload field", () => {
     for (const [name, payload] of Object.entries(samples)) {
       expect(eventPayload(name as keyof AnalyticsEvents, { ...payload, code: "NG-dX626jFL",
-        seed: 12345, history: ["secret"], email: "private@example.com" })).toEqual(payload);
+        query: "private search", seed: 12345, history: ["secret"], email: "private@example.com" })).toEqual(payload);
     }
   });
   it("rejects unbounded names, invalid locales and sensitive values in allowed fields", () => {
     expect(eventPayload("copy_code", { locale: "en", source: "NG-dX626jFL" })).toBeUndefined();
     expect(eventPayload("copy_code", { locale: "en", source: "footer" })).toBeUndefined();
     expect(eventPayload("next_code", { locale: "somebody@example.com" })).toBeUndefined();
+    expect(eventPayload("secondary_feature_open", { locale: "en", feature: "private search" })).toBeUndefined();
+    expect(eventPayload("share_website", { locale: "en", share_method: "whatsapp" })).toBeUndefined();
     expect(eventPayload("unknown" as keyof AnalyticsEvents, { locale: "en" })).toBeUndefined();
     for (const locale of languages) expect(eventPayload("next_code", { locale })).toEqual({ locale });
   });

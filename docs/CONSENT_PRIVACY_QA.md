@@ -1,5 +1,7 @@
 # Final consent UX and privacy QA
 
+This records the original floating banner. The [task-first UX audit](TASK_FIRST_UX.md) covers the current inline prompt and its regression checks.
+
 November 18, 2026. This PR adds the banner; it does not deploy it. Production observations below use the deployed PR #23 implementation. The owner separately confirmed receipt in GA Realtime; this investigation observes browser requests, not private GA reports.
 
 ## Implementation

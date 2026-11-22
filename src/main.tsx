@@ -17,7 +17,6 @@ import {
   type History,
 } from "./core";
 import "./style.css";
-import { TipsTicker } from "./TipsTicker";
 import { CodeList } from "./CodeList";
 import { OfficialAppIntro, CreatorSupport } from "./CommunityLinks";
 import { getProgress } from "./discovery";
@@ -25,7 +24,8 @@ import { formatDate, formatSeason } from "./presentation";
 import { LocaleProvider, LanguageSelector, useLocale } from "./LocaleProvider";
 import { LocalizedError, type TranslationKey } from "./i18n";
 import { analytics, productionTracking, trackingEnvironment, sanitizedAnalyticsUrl } from "./analytics";
-import { AnalyticsPreferences, AnalyticsPreferencesLink } from "./AnalyticsPreferences";
+import { AnalyticsPreferences, AnalyticsPreferencesLink, useAnalyticsConsent } from "./AnalyticsPreferences";
+import { ConsentBanner } from "./ConsentBanner";
 import { copyText } from "./clipboard";
 import { shareWebsite, whatsappUrl } from "./sharing";
 
@@ -37,7 +37,8 @@ function initialHistory() {
   }
 }
 function App() {
-  const { language, locale, dir, t, n } = useLocale();
+  const { language, locale, t, n } = useLocale();
+  const { consent, choose } = useAnalyticsConsent();
   const [history, setHistory] = useState<History>(initialHistory);
   const [now, setNow] = useState(Date.now);
   const [feed, setFeed] = useState<Feed>();
@@ -60,6 +61,10 @@ function App() {
   const cancelReset = useRef<HTMLButtonElement>(null);
   const file = useRef<HTMLInputElement>(null);
   const codeFocus = useRef<HTMLHeadingElement>(null);
+  const codeControls = useRef<HTMLDivElement>(null);
+  const viewedLocales = useRef(new Set<string>());
+  const helpSummary = useRef<HTMLElement>(null);
+  const [codeNotice, setCodeNotice] = useState<TranslationKey | "">("");
   const order = useMemo(
     () => shuffled(feed?.codes || [], history.seed),
     [feed, history.seed],
@@ -100,6 +105,7 @@ function App() {
         try {
           setHistory(e.newValue ? parseHistory(e.newValue) : newHistory());
           setUndo(undefined);
+          setCodeNotice("");
           setNotice("historySynced");
         } catch {
           setStorageWarning(true);
@@ -130,8 +136,35 @@ function App() {
     const timer = setTimeout(() => setNotice(""), 5000);
     return () => clearTimeout(timer);
   }, [notice]);
+  useEffect(() => {
+    if (!codeNotice) return;
+    const timer = setTimeout(() => setCodeNotice(""), 5000);
+    return () => clearTimeout(timer);
+  }, [codeNotice]);
   const entry = feed?.codes.find((e) => e.code === history.current);
   const current = entry?.code;
+  const browserReady = !loading && !error && !!current;
+  useEffect(() => {
+    const target = codeControls.current;
+    if (!browserReady || !target || consent !== "granted" || !analytics.eligible ||
+        viewedLocales.current.has(language) || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || entry.intersectionRatio < 1 || document.hidden) return;
+      viewedLocales.current.add(language);
+      analytics.track("code_browser_view", { locale: language });
+      observer.disconnect();
+    }, { threshold: 1 });
+    const watch = () => {
+      observer.disconnect();
+      if (!document.hidden && !viewedLocales.current.has(language)) observer.observe(target);
+    };
+    watch();
+    document.addEventListener("visibilitychange", watch);
+    return () => {
+      document.removeEventListener("visibilitychange", watch);
+      observer.disconnect();
+    };
+  }, [browserReady, consent, language]);
   const progress = useMemo(
     () => getProgress(feed?.codes || [], history),
     [feed, history],
@@ -147,7 +180,7 @@ function App() {
     if (action === "tried") analytics.track("mark_tried", { locale: language });
     else if (action === "skipped") analytics.track("skip_code", { locale: language });
     else if (next.current) analytics.track("next_code", { locale: language });
-    setNotice(
+    setCodeNotice(
       action === "tried"
         ? "triedNotice"
         : action === "skipped"
@@ -157,21 +190,22 @@ function App() {
     requestAnimationFrame(() => codeFocus.current?.focus());
   }
   async function copy(text: string, message: TranslationKey, source: "browser" | "search" | "creator" = "browser") {
+    const showNotice = source === "browser" ? setCodeNotice : setNotice;
     try {
       await copyText(text);
       analytics.track("copy_code", { locale: language, source });
-      setNotice(message);
+      showNotice(message);
     } catch {
-      setNotice("copyFailed");
+      showNotice("copyFailed");
     }
   }
   async function share() {
-    analytics.track("share_website", { locale: language, share_method: typeof navigator.share === "function" ? "native" : "clipboard" });
     try {
       const method = await shareWebsite(language, t("brand"), t("shareText"), {
         share: typeof navigator.share === "function" ? (data) => navigator.share(data) : undefined,
         copy: copyText,
       });
+      analytics.track("share_website", { locale: language, share_method: method });
       if (method === "clipboard") setNotice("siteCopied");
     } catch (e) {
       if ((e as Error).name !== "AbortError") setNotice("shareFailed");
@@ -215,22 +249,29 @@ function App() {
   }, []);
   const stale =
     feed && now - Date.parse(feed.manifest.generatedAt) > 7 * 86400000;
+  function undoButton() {
+    return (
+      <button disabled={!undo} onClick={() => {
+        if (!undo) return;
+        if (undoAction.current === "tried") analytics.track("undo_tried", { locale: language });
+        undoAction.current = undefined;
+        setHistory(undo);
+        setUndo(undefined);
+        setCodeNotice("undoNotice");
+        requestAnimationFrame(() => codeFocus.current?.focus());
+      }}>{t("undo")}</button>
+    );
+  }
   return (
     <>
       <a className="skip-link" href="#browser">
         {t("skipToCodes")}</a>
       <header className="header">
         <a className="brand" href="#">
-          <span className="brand-mark">✦</span>
-          <div>
-            <h1 className="brand-title">{t("brand")}</h1>
-            <small>{t("tagline")}</small>
-          </div>
+          <span className="brand-mark" aria-hidden="true">✦</span>
+          <h1>{t("brand")}</h1>
         </a>
-        <nav aria-label={t("navigation")}>
-          <a href="#how">{t("howNav")}</a>
-          <a href="#faq">{t("faqNav")}</a>
-          <AnalyticsPreferencesLink />
+        <nav aria-label={t("siteSettings")}>
           <LanguageSelector />
           <button
             className="icon-button"
@@ -245,252 +286,160 @@ function App() {
               )
             }
           >
-            {theme === "dark" ? "☾" : theme === "light" ? "☀" : "◐"}
-            <span className="theme-label">
-              {theme === "system"
-                ? t("themeSystem")
-                : theme === "dark"
-                  ? t("themeDark")
-                  : t("themeLight")}
-            </span>
+            <span aria-hidden="true">{theme === "dark" ? "☾" : theme === "light" ? "☀" : "◐"}</span>
           </button>
+          <AnalyticsPreferencesLink />
         </nav>
       </header>
       <main>
-        <div className="season-bar">
-          <span>{t("independent")}</span>
-          <span>{feed ? formatSeason(feed.manifest.season, language) : loading ? t("seasonLoading") : t("seasonUnavailable")}</span>
-        </div>
-        <OfficialAppIntro />
-        <TipsTicker />
-        {(!online || feed?.cached || stale || storageWarning) && (
-          <div className="banner" role="status">
-            {!online ? t("offline") : ""}
-            {feed?.cached
-              ? t("cachedNotice")
-              : ""}
-            {stale
-              ? t("staleNotice")
-              : ""}
-            {storageWarning
-              ? t("storageWarning")
-              : ""}
+        <section id="browser" className="code-card" aria-labelledby="browser-title" tabIndex={-1}>
+          <div className="card-top">
+            <h2 id="browser-title">{t("communityCodes")}</h2>
+            <span className="badge">{t("unverified")}</span>
           </div>
-        )}
-        {feed?.manifest.maintenance && (
-          <div className="banner">
-            {t("maintenance")}</div>
-        )}
-        <section
-          id="browser"
-          className="browse-layout"
-          aria-label={t("browseCodes")}
-        >
-          <div className="code-card">
-            <div className="card-top">
-              <span>
-                <span className="dot" /> {t("communityCodes")}</span>
-              <span className="badge">{t("unverified")}</span>
+          {loading ? (
+            <div className="state" role="status">
+              <div className="skeleton" />
+              <p>{t("loadingCodes")}</p>
             </div>
-            {loading ? (
-              <div className="state" role="status">
-                <div className="skeleton" />
-                <p>{t("loadingCodes")}</p>
-              </div>
-            ) : error ? (
-              <div className="state">
-                <h2>{t("connectionTitle")}</h2>
-                <p>{error && t(error)}</p>
-                <button className="primary" onClick={() => void reload()}>
-                  {t("retry")}</button>
-                <a
-                  href={"https://services.nusuk.sa/app"} onClick={() => analytics.track("open_nusuk", { locale: language, source: "error" })}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {t("openOfficial")}</a>
-              </div>
-            ) : !order.length ? (
-              <div className="state">
-                <h2>{t("emptyCodes")}</h2>
-                <p>{t("emptyHelp")}</p>
-                <a
-                  href={"https://services.nusuk.sa/app"} onClick={() => analytics.track("open_nusuk", { locale: language, source: "empty" })}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {t("openOfficialAlt")}</a>
-              </div>
-            ) : !current ? (
-              <div className="state">
-                <span className="state-symbol">✓</span>
-                <h2>{t("exhaustedTitle")}</h2>
-                <p>{t("exhaustedHelp")}</p>
-                <button className="primary" onClick={() => setReset(true)}>
-                  {t("newRound")}</button>
-              </div>
-            ) : (
-              <>
-                <div className="code-area">
-                  <p className="mini-label">{t("codeIntro")}</p>
-                  <h2 ref={codeFocus} tabIndex={-1} dir="ltr" className="code">
-                    {current}
-                  </h2>
-                  <span className="code-caption">
-                    {t("caseSensitive")}</span>
-                </div>
-                <div className="browse-actions">
-                  <button
-                    className="primary copy-code"
-                    onClick={() =>
-                      void copy(
-                        current,
-                        "codeCopied",
-                      )
-                    }
-                  >
-                    <span aria-hidden="true">▣</span> {t("copyCode")}</button>
-                  <button
-                    className="secondary next-code"
-                    onClick={() => advance("next")}
-                  >
-                    {t("nextCode")}<span aria-hidden="true">{dir === "rtl" ? "←" : "→"}</span>
-                  </button>
-                  <div className="local-actions">
-                    <button onClick={() => advance("skipped")}>{t("skip")}</button>
-                    <button onClick={() => advance("tried")}>
-                      {t("markTried")}</button>
-                  </div>
-                </div>
-                <p className="manual-flow">
-                  {t("manualFlow")}</p>
-                <div className="official-action">
-                  <a
-                    href={officialUrl(current)} onClick={() => analytics.track("open_nusuk", { locale: language, source: "browser" })}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-describedby="official-link-help"
-                  >
-                    {t("officialLink")}<span aria-hidden="true">↗</span>
-                  </a>
-                  <p id="official-link-help">
-                    {t("officialHelp")}</p>
-                </div>
-              </>
-            )}
-            <div className="card-bottom">
-              <span>{t("noRepeat")}</span>
-              <button
-                disabled={!undo}
-                onClick={() => {
-                  if (undo) {
-                    if (undoAction.current === "tried") analytics.track("undo_tried", { locale: language });
-                    undoAction.current = undefined;
-                    setHistory(undo);
-                    setUndo(undefined);
-                    setNotice("undoNotice");
-                  }
-                }}
+          ) : error ? (
+            <div className="state">
+              <h3>{t("connectionTitle")}</h3>
+              <p>{error && t(error)}</p>
+              <button className="primary" onClick={() => void reload()}>
+                {t("retry")}</button>
+              <a
+                href={"https://services.nusuk.sa/app"} onClick={() => analytics.track("open_nusuk", { locale: language, source: "error" })}
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                {t("undo")}</button>
+                {t("openOfficial")}</a>
             </div>
-          </div>
-          <aside className="progress-card">
-            <span className="mini-label">{t("stepByStep")}</span>
-            <h2>{t("yourJourney")}</h2>
-            <p>
-              {t("localHistory")}<br />
-              {t("progressDisclaimer")}</p>
-            <div className="progress-summary">
-              <span>{t("total")}{" "}<b>{progress.total.toLocaleString(locale)}</b> {t("codeUnit")}</span>
-              <strong>{percentage}</strong>
+          ) : !order.length ? (
+            <div className="state">
+              <h3>{t("emptyCodes")}</h3>
+              <p>{t("emptyHelp")}</p>
+              <a
+                href={"https://services.nusuk.sa/app"} onClick={() => analytics.track("open_nusuk", { locale: language, source: "empty" })}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t("openOfficialAlt")}</a>
             </div>
-            <progress
-              aria-label={t("progressLabel")}
-              aria-valuetext={t("progressReadout", { seen: n(progress.seen), total: n(progress.total), percent: percentage })}
-              value={progress.seen}
-              max={progress.total || 1}
-            />
-            <div className="stats">
-              <div>
-                <strong>{progress.remaining.toLocaleString(locale)}</strong>
-                <span>{t("remaining")}</span>
+          ) : !current ? (
+            <div className="state">
+              <span className="state-symbol">✓</span>
+              <h3>{t("exhaustedTitle")}</h3>
+              <p>{t("exhaustedHelp")}</p>
+              <button className="primary" onClick={() => setReset(true)}>
+                {t("newRound")}</button>
+            </div>
+          ) : (
+            <>
+              <div className="code-controls" ref={codeControls}>
+                <h3 ref={codeFocus} tabIndex={-1} dir="ltr" className="code">
+                  {current}
+                </h3>
+                <div className="browse-actions">
+                  <button className="primary copy-code" onClick={() => void copy(current, "codeCopied")}>
+                    {t("copy")}
+                  </button>
+                  <button className="secondary next-code" onClick={() => advance("next")}>
+                    {t("nextCode")}
+                  </button>
+                </div>
               </div>
-              <div>
-                <strong>{progress.seen.toLocaleString(locale)}</strong>
-                <span>{t("seen")}</span>
+              <div className="local-actions">
+                <button onClick={() => advance("tried")}>{t("tried")}</button>
+                <button onClick={() => advance("skipped")}>{t("skip")}</button>
+                {undoButton()}
               </div>
-            </div>
-            <div className="local-counts">
-              <span>{t("tried")}<b>{progress.tried.toLocaleString(locale)}</b></span>
-              <span>
-                {t("skipped")}<b>{progress.skipped.toLocaleString(locale)}</b>
-              </span>
-            </div>
-            <details>
-              <summary>{t("manageHistory")}</summary>
-              <div className="history-actions">
-                <button onClick={exportHistory}>{t("exportHistory")}</button>
-                <button onClick={() => file.current?.click()}>
-                  {t("importHistory")}</button>
-                <button onClick={() => setReset(true)}>{t("resetHistory")}</button>
-              </div>
-            </details>
-            <input
-              ref={file}
-              hidden
-              type="file"
-              accept="application/json,.json"
-              onChange={(e) => void importHistory(e.target.files?.[0])}
-            />
-            <div className="privacy-note">
-              {t("privacyNote")}</div>
-          </aside>
+              <a
+                className="official-action"
+                aria-describedby="official-help"
+                href={officialUrl(current)} onClick={() => analytics.track("open_nusuk", { locale: language, source: "browser" })}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t("officialLink")} <span aria-hidden="true">↗</span>
+                <span className="sr-only"> {t("newWindow")}</span>
+              </a>
+              <p id="official-help" className="official-help">{t("officialHelp")}</p>
+              <p className="code-notice" role="status">{codeNotice && t(codeNotice)}</p>
+            </>
+          )}
+          {!browserReady && undo && <div className="local-actions">{undoButton()}</div>}
         </section>
+        {(!online || feed?.cached || stale || storageWarning || feed?.manifest.maintenance) && (
+          <div className="banner" role="status">
+            {!online && <p>{t("offline")}</p>}
+            {feed?.cached && <p>{t("cachedNotice")}</p>}
+            {stale && <p>{t("staleNotice")}</p>}
+            {storageWarning && <p>{t("storageWarning")}</p>}
+            {feed?.manifest.maintenance && <p>{t("maintenance")}</p>}
+          </div>
+        )}
+        <details className="progress-card" onToggle={(event) => {
+          if (event.currentTarget.open) analytics.track("secondary_feature_open", { locale: language, feature: "progress" });
+        }}>
+          <summary>
+            <strong>{t("yourJourney")}</strong>
+            {feed && <span className="progress-count">{n(progress.remaining)} {t("remaining")}</span>}
+          </summary>
+          <div className="progress-panel">
+            <p>{t("localHistory")} {t("progressDisclaimer")}</p>
+            <p className="progress-summary">
+              {t("progressReadout", { seen: n(progress.seen), total: n(progress.total), percent: percentage })}
+            </p>
+            <progress aria-label={t("progressLabel")}
+              value={progress.seen} max={progress.total || 1} />
+            <div className="local-counts">
+              <span>{t("tried")} <b>{n(progress.tried)}</b></span>
+              <span>{t("skipped")} <b>{n(progress.skipped)}</b></span>
+            </div>
+            <h3>{t("manageHistory")}</h3>
+            <div className="history-actions">
+              <button onClick={exportHistory}>{t("exportHistory")}</button>
+              <button onClick={() => file.current?.click()}>{t("importHistory")}</button>
+              <button onClick={() => setReset(true)}>{t("resetHistory")}</button>
+            </div>
+            <input ref={file} hidden type="file" accept="application/json,.json"
+              onChange={(e) => void importHistory(e.target.files?.[0])} />
+            <p>{t("privacyNote")}</p>
+          </div>
+        </details>
         <CodeList entries={feed?.codes || []} history={history} loading={loading} error={!!error}
           onCopy={(code) => void copy(code, "listCopied", "search")} />
+        {analytics.eligible && !consent && <ConsentBanner onChoose={(value) => {
+          choose(value);
+          helpSummary.current?.focus({ preventScroll: true });
+        }} />}
+        <details id="how" className="how" onToggle={(event) => {
+          if (event.currentTarget.open) analytics.track("secondary_feature_open", { locale: language, feature: "help" });
+        }}>
+          <summary ref={helpSummary}><h2>{t("howNav")}</h2></summary>
+          <div className="help-panel">
+            <ol className="steps">
+              {[
+                [t("step1Title"), t("step1Body")],
+                [t("step2Title"), t("step2Body")],
+                [t("step3Title"), t("step3Body")],
+              ].map(([title, text]) => (
+                <li key={title}>
+                  <h3>{title}</h3>
+                  <p>{text}</p>
+                </li>
+              ))}
+            </ol>
+            <OfficialAppIntro />
+          </div>
+        </details>
         <div className="freshness">
-          <span>
-            ◷ {feed?.cached ? t("cachedDate") : t("releaseDate")}:{" "}
-            {formatDate(feed?.manifest.generatedAt, language)} ·{" "}
-            {feed ? feed.codes.length.toLocaleString(locale) : "—"} {t("candidateUnit")}</span>
+          <p>{feed ? formatSeason(feed.manifest.season, language) : loading ? t("seasonLoading") : t("seasonUnavailable")}</p>
+          <p>{feed?.cached ? t("cachedDate") : t("releaseDate")}: {formatDate(feed?.manifest.generatedAt, language)}</p>
           <a href="#sources">{t("sourceNav")}</a>
         </div>
-        <section id="how" className="how">
-          <div className="section-heading">
-            <span className="mini-label">{t("simply")}</span>
-            <h2>{t("howTitle")}</h2>
-          </div>
-          <div className="steps">
-            {[
-              [
-                "01",
-                t("step1Title"),
-                t("step1Body"),
-              ],
-              [
-                "02",
-                t("step2Title"),
-                t("step2Body"),
-              ],
-              [
-                "03",
-                t("step3Title"),
-                t("step3Body"),
-              ],
-            ].map(([n, title, text]) => (
-              <article key={n}>
-                <span>{n}</span>
-                <h3>{title}</h3>
-                <p>{text}</p>
-              </article>
-            ))}
-          </div>
-        </section>
         <section id="sources" className="source-box">
-          <span className="source-icon" aria-hidden="true">
-            ◇
-          </span>
           <div>
             <h2>{t("transparencyTitle")}</h2>
             <p>
@@ -540,7 +489,6 @@ function App() {
           ))}
         </section>
         <section className="closing">
-          <span aria-hidden="true">✦</span>
           <h2>{t("continueNusuk")}</h2>
           <p>{t("officialTerms")}</p>
           <a
@@ -551,10 +499,10 @@ function App() {
           >
             {t("openOfficial")}</a>
           <div className="share-actions"><button onClick={() => void share()}>{t("shareSite")}</button>
-          <a href={whatsappUrl(language, t("shareText"))} target="_blank" rel="noopener noreferrer" onClick={() => analytics.track("share_website", { locale: language, share_method: "whatsapp" })}>{t("shareWhatsApp")} <span className="sr-only">{t("newWindow")}</span></a></div>
+          <a href={whatsappUrl(language, t("shareText"))} target="_blank" rel="noopener noreferrer">{t("shareWhatsApp")} <span className="sr-only">{t("newWindow")}</span></a></div>
         </section>
         <CreatorSupport onCopy={(code) => void copy(code, "creatorCopied", "creator")} />
-        <AnalyticsPreferences />
+        <AnalyticsPreferences consent={consent} onChoose={choose} />
       </main>
       <footer>
         <a className="brand" href="#">
@@ -562,9 +510,16 @@ function App() {
         <p>
           {t("footerDisclaimer")}<br />
           {t("footerPrivacy")}</p>
-        <span>{t("madeTogether")}</span>
+        <nav className="footer-nav" aria-label={t("navigation")}>
+          <a href="#browser">{t("browseCodes")}</a>
+          <a href="#how" onClick={() => {
+            const help = document.getElementById("how") as HTMLDetailsElement;
+            help.open = true;
+          }}>{t("howNav")}</a>
+          <a href="#faq">{t("faqNav")}</a>
+        </nav>
       </footer>
-      <div className="toast" role="status" aria-live="polite" key={notice}>
+      <div className="toast" role="status">
         {notice && t(notice)}
       </div>
       <dialog
@@ -583,6 +538,7 @@ function App() {
               setHistory(newHistory());
               setUndo(undefined);
               setReset(false);
+              setCodeNotice("");
               setNotice("resetNotice");
             }}
           >
