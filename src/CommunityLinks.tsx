@@ -1,6 +1,7 @@
+import { useEffect, useRef } from "react";
 import { officialUrl } from "./core";
 import { useLocale } from "./LocaleProvider";
-import { analytics } from "./analytics";
+import { analytics, type Consent } from "./analytics";
 
 const CREATOR_CODE = "NG-dX626jFL";
 
@@ -22,10 +23,50 @@ export function OfficialAppIntro() {
   );
 }
 
-export function CreatorSupport({ onCopy }: { onCopy: (code: string) => void }) {
+export function CreatorSupport({ consent, onCopy }: {
+  consent?: Consent;
+  onCopy: (code: string) => void;
+}) {
   const { t, language } = useLocale();
+  const section = useRef<HTMLElement>(null);
+  const viewed = useRef(false);
+  useEffect(() => {
+    const target = section.current;
+    if (!target || consent !== "granted" || !analytics.eligible ||
+        viewed.current || typeof IntersectionObserver === "undefined") return;
+
+    const threshold = 0.25;
+    let observer: IntersectionObserver | undefined;
+    const watch = () => {
+      observer?.disconnect();
+      observer = undefined;
+      if (document.hidden || viewed.current) return;
+
+      observer = new IntersectionObserver((entries, currentObserver) => {
+        const entry = entries.at(-1);
+        if (currentObserver !== observer || document.hidden || viewed.current ||
+            !entry?.isIntersecting || entry.intersectionRatio < threshold) return;
+
+        if (analytics.track("creator_support_view", { locale: language })) {
+          viewed.current = true;
+          currentObserver.disconnect();
+          document.removeEventListener("visibilitychange", watch);
+        }
+      }, { threshold });
+      observer.observe(target);
+    };
+
+    watch();
+    document.addEventListener("visibilitychange", watch);
+    return () => {
+      document.removeEventListener("visibilitychange", watch);
+      observer?.disconnect();
+      observer = undefined;
+    };
+  }, [consent, language]);
+
   return (
-    <section className="creator-support" aria-labelledby="creator-support-heading">
+    <section ref={section} className="creator-support" aria-labelledby="creator-support-heading">
       <h2 id="creator-support-heading">{t("creatorTitle")}</h2>
       <p>
         {t("creatorBody")}</p>

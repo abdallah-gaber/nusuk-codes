@@ -297,6 +297,104 @@ try {
   report.checks.push('Keyboard entry, clipboard, exact official link, Next persistence, Tried/Skip/Undo, history export/import/reset and search');
   report.checks.push('Consent-gated viewport impression and locale deduplication, three discovery events, successful share only and payload privacy');
 
+  const creatorContext = await context();
+  const creatorPage = await open(creatorContext);
+  await creatorPage.setViewportSize({ width: 320, height: 568 });
+  const support = creatorPage.locator('.creator-support');
+  const settle = () => creatorPage.evaluate(() => new Promise(resolve =>
+    requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve)))));
+  const placeSupport = async top => {
+    await support.evaluate((section, top) => window.scrollBy(0, section.getBoundingClientRect().top - top), top);
+    await settle();
+  };
+  const hide = async hidden => {
+    await creatorPage.evaluate(hidden => {
+      Object.defineProperty(document, 'hidden', { configurable: true, value: hidden });
+      document.dispatchEvent(new window.Event('visibilitychange'));
+    }, hidden);
+    await settle();
+  };
+  const creatorEvents = () => creatorPage.evaluate(() => (window.dataLayer || [])
+    .filter(command => command[0] === 'event' &&
+      (command[1] === 'creator_support_view' || command[2]?.source === 'creator'))
+    .map(command => [command[1], command[2]]));
+  const grant = () => creatorPage.locator('#analytics-preferences .preference-actions button').first()
+    .evaluate(button => button.click());
+
+  await placeSupport(100);
+  assert.deepEqual(await creatorEvents(), []);
+  await creatorPage.locator('.consent-banner-actions button').last().click();
+  await placeSupport(100);
+  assert.deepEqual(await creatorEvents(), []);
+  await placeSupport(700);
+  await grant();
+  await settle();
+  assert.deepEqual(await creatorEvents(), []); // Earlier visible visits are not replayed.
+  await creatorPage.locator('#analytics-preferences .preference-actions button').last()
+    .evaluate(button => button.click());
+  await placeSupport(100);
+  assert.deepEqual(await creatorEvents(), []); // Withdrawal before the first impression.
+  await hide(true);
+  await grant();
+  await settle();
+  assert.deepEqual(await creatorEvents(), []);
+  await placeSupport(700);
+  await hide(false);
+  await placeSupport(552);
+  assert.deepEqual(await creatorEvents(), []); // Only a sliver intersects the viewport.
+  await placeSupport(100);
+  await creatorPage.waitForFunction(() => (window.dataLayer || []).some(c => c[1] === 'creator_support_view'));
+  await placeSupport(700);
+  await placeSupport(100);
+  await creatorPage.getByRole('combobox').selectOption('ar');
+  await placeSupport(100);
+  await creatorPage.getByRole('combobox').selectOption('en');
+  await placeSupport(100);
+  assert.deepEqual(await creatorEvents(), [['creator_support_view', { locale: 'en' }]]);
+
+  const referral = new URL(await support.locator('a').getAttribute('href'));
+  const creatorCode = await support.locator('code').innerText();
+  assert.equal(referral.origin, 'https://services.nusuk.sa');
+  assert.equal(referral.searchParams.get('id'), creatorCode);
+  await creatorPage.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true, value: { writeText: async () => { throw new Error('denied'); } }
+    });
+    document.execCommand = () => false;
+  });
+  await support.locator('button').click();
+  await creatorPage.locator('.toast').filter({ hasText: 'Automatic copy failed' }).waitFor();
+  assert.equal((await creatorEvents()).length, 1);
+  await creatorPage.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true, value: { writeText: async text => { window.qaClipboard = text; } }
+    });
+  });
+  await support.locator('button').click();
+  await creatorPage.locator('.toast').filter({ hasText: 'Creator invitation code copied' }).waitFor();
+  assert.equal(await creatorPage.evaluate(() => window.qaClipboard), creatorCode);
+  const [outbound] = await Promise.all([creatorPage.waitForEvent('popup'), support.locator('a').click()]);
+  await outbound.close();
+  const actions = [
+    ['creator_support_view', { locale: 'en' }],
+    ['copy_code', { locale: 'en', source: 'creator' }],
+    ['open_nusuk', { locale: 'en', source: 'creator' }],
+  ];
+  assert.deepEqual(await creatorEvents(), actions);
+  assert.equal(creatorPage.url(), origin + '/en/');
+  const pageContexts = await creatorPage.evaluate(() => (window.dataLayer || [])
+    .flatMap(command => [command[1]?.page_location, command[2]?.page_location, command[3]?.page_location])
+    .filter(Boolean));
+  assert.ok(pageContexts.length);
+  assert.ok(pageContexts.every(url => /^https:\/\/nusuk\.abdallahgaber\.dev\/(ar|en|id|ur)\/$/.test(url)));
+  await withdraw(creatorPage);
+  await support.locator('button').click();
+  await grant();
+  await placeSupport(100);
+  assert.deepEqual(await creatorEvents(), actions);
+  await creatorContext.close();
+  report.checks.push('Creator section on 320 × 568 with Google blocked: consent, withdrawal, simulated hidden tab, real viewport threshold, deduplication, copy success/failure, outbound intent and exact private-safe event/page parameters');
+
   log(JSON.stringify({ checks: report.checks, viewports: report.viewports.length }));
 } finally {
   await fs.writeFile(path.join(output, 'browser-ui-qa.json'), JSON.stringify(report, null, 2) + '\n');

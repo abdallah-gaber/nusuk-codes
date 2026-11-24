@@ -21,8 +21,7 @@ describe("crawlable content and preview protection", () => {
   it("releases complete Urdu without activating Bengali or Hindi", () => {
     expect(pathLanguage("/ur/")).toBe("ur"); expect(direction("ur")).toBe("rtl");
     expect(pathLanguage("/bn/")).toBeUndefined(); expect(pathLanguage("/hi/")).toBeUndefined();
-    expect(translate("ur", "unverified")).toBe("غیر تصدیق شدہ");
-    expect(translate("ur", "faq4Answer")).toContain("ضمانت نہیں");
+    expect(translate("ur", "officialHelp")).toContain("آفیشل نسک ایپ");
     expect(translate("ur", "creatorDisclaimer")).toContain("اختیاری");
   });
 });

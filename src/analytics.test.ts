@@ -20,6 +20,7 @@ describe("consent-gated production analytics", () => {
     { deployment: "preview" }, { deployment: "development" }])("blocks non-production contexts %j", (env) => {
     const { client, runtime } = fixture(env);
     client.setConsent("granted"); client.setPage("ur");
+    expect(client.track("creator_support_view", { locale: "ur" })).toBe(false);
     expect(runtime.load).not.toHaveBeenCalled(); expect(runtime.send).not.toHaveBeenCalled();
     expect(productionTracking({ production: true, hostname: "nusuk.abdallahgaber.dev", ...env })).toBe(false);
   });
@@ -30,7 +31,10 @@ describe("consent-gated production analytics", () => {
   });
   it("does not queue pre-consent activity or denied-consent network commands", () => {
     const { client, runtime } = fixture();
-    client.setPage("ur"); client.track("mark_tried", { locale: "ur" }); client.setConsent("denied");
+    client.setPage("ur"); client.track("mark_tried", { locale: "ur" });
+    expect(client.track("creator_support_view", { locale: "ur" })).toBe(false);
+    client.setConsent("denied");
+    expect(client.track("creator_support_view", { locale: "ur" })).toBe(false);
     expect(runtime.send).not.toHaveBeenCalled(); expect(runtime.load).not.toHaveBeenCalled();
   });
   it("initializes once and deduplicates Strict Mode, consent effects and same-locale URLs", () => {
@@ -53,6 +57,7 @@ describe("consent-gated production analytics", () => {
     client.setConsent("granted"); client.setConsent("denied");
     const count = runtime.send.mock.calls.length;
     client.track("copy_code", { locale: "en", source: "browser" }); client.setPage("en");
+    expect(client.track("creator_support_view", { locale: "en" })).toBe(false);
     expect(runtime.send).toHaveBeenCalledTimes(count);
     expect(runtime.disable).toHaveBeenLastCalledWith("G-TEST123456", true);
     expect(runtime.clearCookies).toHaveBeenCalledTimes(1);
@@ -102,7 +107,7 @@ describe("bounded non-sensitive events", () => {
     open_nusuk: { locale: "en", source: "intro" }, language_change: { locale: "ur", previous_locale: "en" },
     share_website: { locale: "en", share_method: "clipboard" }, history_export: { locale: "en" },
     history_import: { locale: "en" }, code_browser_view: { locale: "en" },
-    secondary_feature_open: { locale: "en", feature: "help" },
+    creator_support_view: { locale: "en" }, secondary_feature_open: { locale: "en", feature: "help" },
   };
   it("strips query strings, fragments and preview hosts from Vercel page URLs", () => {
     expect(sanitizedAnalyticsUrl("https://branch.vercel.app/ur/?code=NG-dX626jFL#private"))
@@ -111,8 +116,15 @@ describe("bounded non-sensitive events", () => {
   it("accepts the documented events and strips every unexpected payload field", () => {
     for (const [name, payload] of Object.entries(samples)) {
       expect(eventPayload(name as keyof AnalyticsEvents, { ...payload, code: "NG-dX626jFL",
-        query: "private search", seed: 12345, history: ["secret"], email: "private@example.com" })).toEqual(payload);
+        query: "private search", seed: 12345, history: ["secret"], email: "private@example.com",
+        link_url: "https://services.nusuk.sa/app?p=27&id=private", clipboard: "secret" })).toEqual(payload);
     }
+  });
+  it("keeps creator actions distinguishable and the view payload locale-only", () => {
+    for (const name of ["copy_code", "open_nusuk"] as const) {
+      expect(eventPayload(name, { locale: "id", source: "creator" })).toEqual({ locale: "id", source: "creator" });
+    }
+    expect(eventPayload("creator_support_view", { locale: "id", source: "creator" })).toEqual({ locale: "id" });
   });
   it("rejects unbounded names, invalid locales and sensitive values in allowed fields", () => {
     expect(eventPayload("copy_code", { locale: "en", source: "NG-dX626jFL" })).toBeUndefined();
