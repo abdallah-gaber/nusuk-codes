@@ -293,10 +293,7 @@ function App() {
       </header>
       <main>
         <section id="browser" className="code-card" aria-labelledby="browser-title" tabIndex={-1}>
-          <div className="card-top">
-            <h2 id="browser-title">{t("communityCodes")}</h2>
-            <span className="badge">{t("unverified")}</span>
-          </div>
+          <h2 id="browser-title">{t("communityCodes")}</h2>
           {loading ? (
             <div className="state" role="status">
               <div className="skeleton" />
@@ -501,7 +498,7 @@ function App() {
           <div className="share-actions"><button onClick={() => void share()}>{t("shareSite")}</button>
           <a href={whatsappUrl(language, t("shareText"))} target="_blank" rel="noopener noreferrer">{t("shareWhatsApp")} <span className="sr-only">{t("newWindow")}</span></a></div>
         </section>
-        <CreatorSupport onCopy={(code) => void copy(code, "creatorCopied", "creator")} />
+        <CreatorSupport consent={consent} onCopy={(code) => void copy(code, "creatorCopied", "creator")} />
         <AnalyticsPreferences consent={consent} onChoose={choose} />
       </main>
       <footer>

@@ -15,6 +15,7 @@ export type AnalyticsEvents = {
   language_change: Base & { previous_locale: Language };
   share_website: Base & { share_method: "native" | "clipboard" };
   code_browser_view: Base;
+  creator_support_view: Base;
   secondary_feature_open: Base & { feature: "search" | "progress" | "help" };
   history_export: Base;
   history_import: Base;
@@ -35,7 +36,7 @@ const eventFields: Record<keyof AnalyticsEvents, readonly (keyof typeof fields)[
   mark_tried: ["locale"], undo_tried: ["locale"], open_nusuk: ["locale", "source"],
   language_change: ["locale", "previous_locale"], share_website: ["locale", "share_method"],
   history_export: ["locale"], history_import: ["locale"],
-  code_browser_view: ["locale"], secondary_feature_open: ["locale", "feature"],
+  code_browser_view: ["locale"], creator_support_view: ["locale"], secondary_feature_open: ["locale", "feature"],
 };
 export function eventPayload(name: keyof AnalyticsEvents, input: object): Record<string, string> | undefined {
   if (!Object.hasOwn(eventFields, name)) return;
@@ -104,9 +105,11 @@ export class AnalyticsClient {
     this.setPage(this.language);
   }
   track<N extends keyof AnalyticsEvents>(name: N, input: AnalyticsEvents[N]) {
-    if (!this.active) return;
+    if (!this.active) return false;
     const payload = eventPayload(name, input);
-    if (payload) this.safeSend("event", name, payload);
+    if (!payload) return false;
+    this.safeSend("event", name, payload);
+    return true;
   }
   private safeSend(...command: unknown[]) {
     try { this.runtime.send(...command); } catch { /* Analytics is optional. */ }

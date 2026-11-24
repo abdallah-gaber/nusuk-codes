@@ -62,6 +62,7 @@ All events require eligible production configuration and granted consent. This m
 | --- | --- | --- |
 | page_view | Manual page view on consent grant or locale transition, deduplicated for the same active locale | Sanitized page location, title, origin-only referrer |
 | code_browser_view | Code, Copy and Next fully intersect the viewport in a foreground tab, once per locale per document | — |
+| creator_support_view | At least 25% of the Creator Support section intersects the viewport in a foreground tab, once per page load after consent | — |
 | secondary_feature_open | Search, progress or help opens. Closing sends no event | feature |
 | copy_code | Clipboard write resolves successfully; browser/search/creator | source |
 | next_code | Next selects another unseen code | — |
@@ -116,6 +117,34 @@ See [Google localized-version guidance](https://developers.google.com/search/doc
 8. Register event-scoped custom dimensions locale, previous_locale, source, share_method and feature if needed. Recommend copy_code and open_nusuk as optional key events: they measure successful clipboard writes and outbound intent, never keys/rewards/redemption.
 
 Use [manual page views](https://developers.google.com/analytics/devguides/collection/ga4/views), [consent guidance](https://developers.google.com/tag-platform/security/guides/consent), [cookie controls](https://developers.google.com/tag-platform/security/guides/customize-cookies) and [privacy controls](https://developers.google.com/tag-platform/security/guides/privacy). Realtime/DebugView verification with a real property is an owner follow-up, not a completed test.
+
+## GA4 Creator Support reporting
+
+| Event | Exact application parameters | What it measures |
+| --- | --- | --- |
+| `creator_support_view` | `{ locale }` | First qualifying foreground viewport observation after consent. A section that is still in view when consent is granted can qualify on a fresh observation. Earlier views are never saved or replayed. Scrolling back, changing language or regranting consent on the same page does not add another impression. |
+| `copy_code` | `{ locale, source: "creator" }` | A successful creator-code clipboard write, including a confirmed fallback. A failed copy emits no event. |
+| `open_nusuk` | `{ locale, source: "creator" }` | A click on the creator’s official referral link. It measures outbound intent. |
+
+The locale is `ar`, `en`, `id` or `ur`. These three measures describe observed exposure and actions. Successful redemption, referral conversion, eligibility and key rewards are determined outside this site. A reload can produce a new impression. The measurement uses geometric intersection, with no dwell-time requirement. Consent, supported viewport observation, tag blocking, connectivity and GA processing affect coverage. There is no impression replay or retry. The app supplies no code, destination URL, clipboard content, history, identifier or sensitive query parameter in these events. The Google SDK can add standard session identifiers and technical context after consent. Keep Enhanced Measurement off so automatic outbound collection cannot capture referral URLs.
+
+### Register the action source
+
+Google’s reserved event-parameter list permits `source`. Here it is the site action’s origin. GA4’s built-in traffic acquisition dimensions describe how a user reached the site. Use an event-scoped custom dimension and verify it on the intended property. [GA4 reserved event parameters](https://support.google.com/analytics/answer/13316687?hl=en)
+
+1. In the production GA4 property, use an Editor or Administrator account. Check **Reports → Realtime → Event count by Event name** or **DebugView** after a consenting production test. Inspect `copy_code` and `open_nusuk` and confirm both have `source=creator`. Keep Enhanced Measurement off.
+2. Go to **Admin → Data display → Custom definitions → Custom dimensions**. Reuse an existing Event-scoped dimension on `source` if one is already registered.
+3. Otherwise choose **Create custom dimension**. Set **Dimension name** to **Action source**, **Scope** to **Event**, and **Event parameter** to **source**. Save. [Google’s setup instructions](https://support.google.com/analytics/answer/14239696?hl=en)
+4. Allow 24–48 hours after registration and collection for the dimension to be available in reports. Start with a date range after registration and the creator-impression release. A newly registered dimension does not guarantee historical reporting, even if earlier raw events contained `source`.
+
+### Build the Explore report
+
+Open **Explore → Free form**. Import **Event name** and the custom **Action source** dimension, plus the **Event count** metric. Set **Rows** to **Event name** and **Values** to **Event count** on both tabs:
+
+- **Creator impressions** filters **Event name** to exactly `creator_support_view`.
+- **Creator actions** filters **Event name** with the regex `^(copy_code|open_nusuk)$` and **Action source** to exactly `creator`.
+
+The impressions tab needs no source filter. The actions tab shows separate counts for successful copies and outbound clicks. Use the same reporting dates for both. The production property still needs owner verification of ingestion and the custom dimension. [GA4 Free-form exploration](https://support.google.com/analytics/answer/9327972)
 
 ## Privacy and attribution
 

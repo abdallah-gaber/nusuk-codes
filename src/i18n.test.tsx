@@ -30,12 +30,15 @@ describe("translation coverage", () => {
       expect(readFileSync("src/" + file, "utf8"), file).not.toMatch(/[\u0600-\u06ff]/);
     }
   });
-  it.each(["en", "id"] as const)("%s retains critical independence, verification and reward disclaimers", (language) => {
-    expect(translate(language, "unverified")).toBe(language === "en" ? "Unverified" : "Belum diverifikasi");
-    expect(translate(language, "faq3Answer")).toContain(language === "en" ? "unaffiliated" : "tidak berafiliasi");
-    expect(translate(language, "faq4Answer")).toContain(language === "en" ? "do not guarantee" : "tidak menjamin");
-    expect(translate(language, "creatorDisclaimer")).toContain(language === "en" ? "optional" : "opsional");
-    expect(translate(language, "progressDisclaimer")).toContain(language === "en" ? "do not confirm redemption" : "tidak membuktikan keberhasilan");
+  it.each([
+    ["en", "Community-shared codes · Check in Nusuk", "aren’t guaranteed", "unaffiliated with Nusuk"],
+    ["ar", "أكواد شاركها المجتمع · جرّبها في نسك", "مش مضمونة", "غير تابع لنسك"],
+    ["id", "Kode dari komunitas · Cek di Nusuk", "tidak dijamin", "tidak berafiliasi dengan Nusuk"],
+    ["ur", "کمیونٹی کے شیئر کردہ کوڈز · نسک میں آزمائیں", "ضمانت نہیں", "نسک سے وابستہ نہیں"],
+  ] as const)("%s directs code checks to Nusuk and retains the essential disclosures", (language, heading, caveat, independence) => {
+    expect(translate(language, "communityCodes")).toBe(heading);
+    expect(translate(language, "officialHelp")).toContain(caveat);
+    expect(translate(language, "footerDisclaimer")).toContain(independence);
   });
 });
 
@@ -54,7 +57,7 @@ describe("language URLs and preferences", () => {
     expect(pathLanguage("/" + language)).toBe(language);
     expect(pathLanguage("/" + language + "/")).toBe(language);
     expect(detectLanguage("/" + language + "/", "ar", ["en"])).toBe(language);
-    expect(direction(language)).toBe(direction(language));
+    expect(direction(language)).toBe(language === "ar" || language === "ur" ? "rtl" : "ltr");
   });
   it("ignores unsupported paths and unavailable preference storage", () => {
     expect(pathLanguage("/english/")).toBeUndefined();
