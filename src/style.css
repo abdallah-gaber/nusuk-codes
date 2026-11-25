@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @source not "./winners";
+@source not "../scripts/winners-poc";
+@source not "../docs/WINNERS_AUTOMATION_POC.md";
 
 :root {
   font-family: Tahoma, Arial, sans-serif;
