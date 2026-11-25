@@ -3,6 +3,7 @@
     "deploymentEnabled": {
       "ux/mobile-task-first": false,
       "feat/daily-winners": false,
+      "poc/winners-discovery": false,
       "data/winners-*": false
     }
   },
