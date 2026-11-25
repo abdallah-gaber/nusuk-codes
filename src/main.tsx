@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Analytics } from "@vercel/analytics/react";
 import {
@@ -28,6 +28,8 @@ import { AnalyticsPreferences, AnalyticsPreferencesLink, useAnalyticsConsent } f
 import { ConsentBanner } from "./ConsentBanner";
 import { copyText } from "./clipboard";
 import { shareWebsite, whatsappUrl } from "./sharing";
+
+const Winners = __WINNERS_ENABLED__ ? lazy(() => import("./winners/Winners")) : null;
 
 function initialHistory() {
   try {
@@ -376,6 +378,7 @@ function App() {
             {feed?.manifest.maintenance && <p>{t("maintenance")}</p>}
           </div>
         )}
+        {Winners && !loading && <Suspense fallback={null}><Winners now={now} /></Suspense>}
         <details className="progress-card" onToggle={(event) => {
           if (event.currentTarget.open) analytics.track("secondary_feature_open", { locale: language, feature: "progress" });
         }}>

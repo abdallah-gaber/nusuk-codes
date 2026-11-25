@@ -5,6 +5,8 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { languages, pathLanguage } from "./src/i18n";
 import { localizedHtml } from "./src/localeMetadata";
+import { validateWinners } from "./src/winners/data";
+import winners from "./src/winners/data.json";
 
 function languagePages(): Plugin {
   let output = "";
@@ -33,4 +35,10 @@ function languagePages(): Plugin {
     },
   };
 }
-export default defineConfig({ define: { "import.meta.env.VITE_DEPLOYMENT_ENV": JSON.stringify(process.env.VERCEL_ENV || "") }, plugins: [react(), tailwindcss(), languagePages()] });
+export default defineConfig({
+  define: {
+    "import.meta.env.VITE_DEPLOYMENT_ENV": JSON.stringify(process.env.VERCEL_ENV || ""),
+    __WINNERS_ENABLED__: JSON.stringify(validateWinners(winners).presentationEnabled),
+  },
+  plugins: [react(), tailwindcss(), languagePages()],
+});
