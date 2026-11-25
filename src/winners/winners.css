@@ -221,6 +221,14 @@
   background: var(--piece-color);
   animation: winners-confetti-fall var(--piece-duration) var(--piece-delay) cubic-bezier(0.32, 0.12, 0.6, 1) both;
 }
+.winners-confetti--automatic {
+  --confetti-opacity: 0.8;
+  animation-duration: 2.1s;
+}
+.winners-confetti--automatic .winners-confetti-piece {
+  animation-duration: calc(var(--piece-duration) * 0.62);
+  animation-delay: calc(var(--piece-delay) * 0.6);
+}
 .winners-confetti-piece--ribbon {
   inline-size: calc(var(--piece-size) * 0.65);
   block-size: calc(var(--piece-size) * 2.2);
@@ -239,10 +247,10 @@
   color: var(--winners-gold);
   font-size: 0.875rem;
   pointer-events: none;
-  animation: winners-sparkle 560ms ease-out both;
+  animation: winners-sparkle 960ms ease-out both;
 }
 @keyframes winners-reveal {
-  from, 99% { opacity: 1; }
+  from, 99% { opacity: var(--confetti-opacity, 1); }
   to { opacity: 0; }
 }
 @keyframes winners-confetti-fall {
