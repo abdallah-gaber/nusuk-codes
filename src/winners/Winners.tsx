@@ -54,23 +54,29 @@ export default function Winners({ now }: { now: number }) {
     return isRamadanWinner(record, campaign) ? labels.ramadan : labels.umrah;
   }
 
-  function winnerMeta(record: Winner, showOrdinal = false) {
+  function winnerNumber(record: Winner) {
+    if (record.winnerOrdinal === undefined) return undefined;
+    return labels.winnerNumber.replace("{number}", n(record.winnerOrdinal));
+  }
+
+  function winnerMeta(record: Winner) {
     const ramadan = isRamadanWinner(record, campaign);
+    const number = winnerNumber(record);
     return (
       <span className="winner-meta">
         <span className={ramadan ? "winner-prize winner-prize--ramadan" : "winner-prize"}>
           {ramadan ? labels.ramadan : labels.umrah}
         </span>
+        {number && <span className="winner-number">{number}</span>}
         {record.country && <span>
           <span aria-hidden="true">{flag(record.country)} </span>{displayNames.of(record.country)}
         </span>}
         {record.announcedOn && <time dateTime={record.announcedOn}>{formatDate(record.announcedOn, language)}</time>}
-        {(showOrdinal || !record.announcedOn) && record.winnerOrdinal &&
-          <span>{labels.winnerNumber.replace("{number}", n(record.winnerOrdinal))}</span>}
       </span>
     );
   }
 
+  const manualNumber = manualWinner && winnerNumber(manualWinner);
   return (
     <section className="winners" aria-labelledby="winners-title"
       onPointerEnter={(event) => { if (event.pointerType === "mouse") setHovered(true); }}
@@ -83,7 +89,7 @@ export default function Winners({ now }: { now: number }) {
           {open ? labels.closeHistory : labels.history}
         </button>
       </div>
-      <div className="winners-ticker">
+      <div className={canRotate ? "winners-ticker winners-ticker--rotating" : "winners-ticker"}>
         <div className="winner-current" key={winner.id} aria-live="off">
           <strong><bdi>{winner.displayName}</bdi></strong>
           {winnerMeta(winner)}
@@ -102,9 +108,13 @@ export default function Winners({ now }: { now: number }) {
           </button>
         </div>}
         <span className="sr-only" aria-live="polite" aria-atomic="true">
-          {manualWinner && <><bdi>{manualWinner.displayName}</bdi>, {prizeLabel(manualWinner)}</>}
+          {manualWinner && <>
+            <bdi>{manualWinner.displayName}</bdi>{manualNumber && ` · ${manualNumber}`}
+            {" · "}{prizeLabel(manualWinner)}
+          </>}
         </span>
       </div>
+      <p className="winners-encouragement">{labels.encouragement} <span aria-hidden="true">🤲</span></p>
       <div id="winners-history" className="winners-history" hidden={!open}>
         {open && <>
           <p>{labels.partial} {labels.updated} <time dateTime={data.updatedAt}>{formatDate(data.updatedAt, language)}</time>.
@@ -120,7 +130,7 @@ export default function Winners({ now }: { now: number }) {
             {history.map((record) => <li key={record.id}>
               <div>
                 <strong><bdi>{record.displayName}</bdi></strong>
-                {winnerMeta(record, true)}
+                {winnerMeta(record)}
               </div>
               <a href={record.announcementUrl} target="_blank" rel="noopener noreferrer"
                 aria-label={`${labels.source} · ${record.displayName} ${t("newWindow")}`}>

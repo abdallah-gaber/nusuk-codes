@@ -64,6 +64,15 @@
   color: var(--muted);
   font-size: 0.8125rem;
 }
+.winner-number {
+  white-space: nowrap;
+}
+.winners-encouragement {
+  margin-block: 4px 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
 .winner-prize {
   border-radius: 6px;
   padding: 1px 6px;
@@ -95,6 +104,27 @@
   gap: 4px;
   min-height: 44px;
 }
+@media (max-width: 360px) {
+  .winners-history-toggle { max-inline-size: 46%; }
+  .winners-ticker--rotating {
+    position: relative;
+    display: block;
+    --winner-controls-space: 96px;
+  }
+  .winners-ticker--rotating .winner-current strong {
+    display: flex;
+    align-items: center;
+    min-block-size: 44px;
+    line-height: 1.45;
+    padding-inline-end: var(--winner-controls-space);
+  }
+  .winner-controls {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .winner-current { animation: none; }
+  .winners-ticker--rotating { --winner-controls-space: 52px; }
 }
