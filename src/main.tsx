@@ -294,6 +294,9 @@ function App() {
         </nav>
       </header>
       <main>
+        {Winners && <div className="winners-slot">
+          <Suspense fallback={null}><Winners now={now} /></Suspense>
+        </div>}
         <section id="browser" className="code-card" aria-labelledby="browser-title" tabIndex={-1}>
           <h2 id="browser-title">{t("communityCodes")}</h2>
           {loading ? (
@@ -378,7 +381,6 @@ function App() {
             {feed?.manifest.maintenance && <p>{t("maintenance")}</p>}
           </div>
         )}
-        {Winners && !loading && <Suspense fallback={null}><Winners now={now} /></Suspense>}
         <details className="progress-card" onToggle={(event) => {
           if (event.currentTarget.open) analytics.track("secondary_feature_open", { locale: language, feature: "progress" });
         }}>

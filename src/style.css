@@ -147,6 +147,17 @@ footer {
 }
 
 main { padding-block: 12px 28px; }
+.winners-slot {
+  --winners-min-height: 136px;
+  min-block-size: var(--winners-min-height);
+  margin-block-end: 12px;
+}
+@media (max-width: 360px) {
+  .winners-slot { --winners-min-height: 140px; }
+}
+@media (min-width: 500px) {
+  .winners-slot { --winners-min-height: 130px; }
+}
 .code-card,
 .progress-card,
 .code-list,

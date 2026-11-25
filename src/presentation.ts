@@ -5,9 +5,9 @@ const dateOptions: Intl.DateTimeFormatOptions = {
 };
 
 // Render release and observation dates consistently, regardless of device timezone.
-export function formatDate(value?: string, language: Language = "ar"): string {
+export function formatDate(value?: string, language: Language = "ar", month: "long" | "short" = "long"): string {
   if (!value || !Number.isFinite(Date.parse(value))) return translate(language, "unavailable");
-  return new Date(value).toLocaleDateString(locales[language], dateOptions);
+  return new Date(value).toLocaleDateString(locales[language], { ...dateOptions, month });
 }
 
 // The manifest identifies a dataset month, not official challenge start/end dates.

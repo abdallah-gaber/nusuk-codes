@@ -1,6 +1,7 @@
 {
   "git": {
     "deploymentEnabled": {
+      "ux/winners-celebration": false,
       "ux/mobile-task-first": false,
       "feat/daily-winners": false,
       "data/winners-*": false
