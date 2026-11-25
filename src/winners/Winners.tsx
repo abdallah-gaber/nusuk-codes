@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type AnimationEvent, type CSSProperties } from "react";
 import { useLocale } from "../LocaleProvider";
 import { formatDate } from "../presentation";
 import { isRamadanWinner, orderedWinners, type Winner, type WinnersArchive } from "./data";
@@ -17,7 +17,9 @@ const newestDate = history[0]?.announcedOn;
 const canRotate = history.length > 1;
 
 type Direction = "newer" | "older";
-type WinnerView = { index: number; direction: Direction; previous?: number; manual?: boolean };
+type Celebration = "initial" | "automatic" | "manual";
+type Interaction = "blocking" | "resumed" | null;
+type WinnerView = { index: number; direction: Direction; previous?: number; celebration?: Celebration };
 
 const confettiShapes = ["ribbon", "rectangle", "sparkle"] as const;
 const confettiColors = ["#ffcf71", "#68dfae", "#fff0cb"] as const;
@@ -36,9 +38,39 @@ const confettiPieces = Array.from({ length: 32 }, (_, index) => ({
   } as CSSProperties,
 }));
 
-function changeWinner(view: WinnerView, direction: Direction): WinnerView {
+const automaticPieces = confettiPieces.filter((_, index) => index % 3 !== 2);
+
+function changeWinner(view: WinnerView, direction: Direction, celebration?: Celebration): WinnerView {
   const step = direction === "older" ? 1 : -1;
-  return { index: (view.index + step + history.length) % history.length, previous: view.index, direction };
+  return {
+    index: (view.index + step + history.length) % history.length,
+    previous: celebration ? view.index : undefined,
+    direction,
+    celebration,
+  };
+}
+
+function WinnerCelebration({ kind }: { kind: Celebration }) {
+  const [finished, setFinished] = useState(false);
+  if (finished) return null;
+
+  function finish(event: AnimationEvent<HTMLElement>) {
+    if (event.target === event.currentTarget) setFinished(true);
+  }
+
+  if (kind === "manual") {
+    return <span className="winners-manual-sparkle" aria-hidden="true" onAnimationEnd={finish}>✦</span>;
+  }
+
+  const automatic = kind === "automatic";
+  return (
+    <div className={automatic ? "winners-confetti winners-confetti--automatic" : "winners-confetti"}
+      aria-hidden="true" onAnimationEnd={finish}>
+      {(automatic ? automaticPieces : confettiPieces).map(({ shape, style }, index) => (
+        <span className={`winners-confetti-piece winners-confetti-piece--${shape}`} style={style} key={index} />
+      ))}
+    </div>
+  );
 }
 
 function flag(country: string) {
@@ -48,14 +80,17 @@ function flag(country: string) {
 export default function Winners({ now }: { now: number }) {
   const { language, locale, n, t } = useLocale();
   const labels = winnersLabels[language];
-  const [view, setView] = useState<WinnerView>({ index: 0, direction: "older" });
+  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia(motionQuery).matches);
+  const [view, setView] = useState<WinnerView>({
+    index: 0,
+    direction: "older",
+    celebration: reducedMotion ? undefined : "initial",
+  });
   const [paused, setPaused] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
+  const [pointer, setPointer] = useState<Interaction>(null);
+  const [focus, setFocus] = useState<Interaction>(null);
   const [open, setOpen] = useState(false);
   const [manualWinner, setManualWinner] = useState<Winner>();
-  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia(motionQuery).matches);
-  const [celebrating, setCelebrating] = useState(!reducedMotion);
   const archiveDialog = useRef<HTMLDialogElement>(null);
   const archiveButton = useRef<HTMLButtonElement>(null);
 
@@ -63,26 +98,38 @@ export default function Winners({ now }: { now: number }) {
     const preference = window.matchMedia(motionQuery);
     const update = () => {
       setReducedMotion(preference.matches);
-      if (preference.matches) setCelebrating(false);
+      if (preference.matches) setView(({ index, direction }) => ({ index, direction }));
     };
     preference.addEventListener("change", update);
     return () => preference.removeEventListener("change", update);
   }, []);
 
+  const rotating = canRotate && !paused && pointer !== "blocking" && focus !== "blocking" && !open && !reducedMotion;
   useEffect(() => {
-    if (!canRotate || paused || hovered || focused || open || reducedMotion) return;
-    const timer = window.setTimeout(() => setView((current) => changeWinner(current, "older")), rotationMs);
+    if (!rotating) return;
+    const timer = window.setTimeout(() => {
+      setView((current) => changeWinner(current, "older", "automatic"));
+    }, rotationMs);
     return () => window.clearTimeout(timer);
-  }, [view.index, paused, hovered, focused, open, reducedMotion]);
+  }, [rotating, view.index]);
 
   if (!data.presentationEnabled || !history.length || !data.updatedAt) return null;
 
   const displayNames = new Intl.DisplayNames([locale], { type: "region" });
   const old = newestDate && now - Date.parse(newestDate) > weekMs;
 
+  function toggleRotation() {
+    setPaused(!paused);
+    if (paused) {
+      // Resume releases the current interaction. A new pointer entry or focus still pauses rotation.
+      setPointer((current) => current === "blocking" ? "resumed" : current);
+      setFocus((current) => current === "blocking" ? "resumed" : current);
+    }
+  }
+
   function navigate(direction: Direction) {
-    const selected = changeWinner(view, direction);
-    setView({ ...selected, manual: true });
+    const selected = changeWinner(view, direction, reducedMotion ? undefined : "manual");
+    setView(selected);
     setPaused(true);
     setManualWinner(history[selected.index]);
   }
@@ -121,18 +168,10 @@ export default function Winners({ now }: { now: number }) {
   return (
     <>
       <section className="winners-banner" aria-labelledby="winners-title"
-        onPointerEnter={(event) => { if (event.pointerType === "mouse") setHovered(true); }}
-        onPointerLeave={() => setHovered(false)} onFocus={() => setFocused(true)}
-        onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
-        {!reducedMotion && celebrating && <div className="winners-confetti" aria-hidden="true"
-          onAnimationEnd={(event) => {
-            if (event.target === event.currentTarget) setCelebrating(false);
-          }}>
-          {confettiPieces.map(({ shape, style }, index) => (
-            <span className={`winners-confetti-piece winners-confetti-piece--${shape}`} style={style} key={index} />
-          ))}
-        </div>}
-        {!reducedMotion && view.manual && <span className="winners-manual-sparkle" aria-hidden="true" key={view.index}>✦</span>}
+        onPointerEnter={(event) => { if (event.pointerType === "mouse") setPointer("blocking"); }}
+        onPointerLeave={() => setPointer(null)} onFocus={() => setFocus("blocking")}
+        onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocus(null); }}>
+        {!reducedMotion && view.celebration && <WinnerCelebration key={view.index} kind={view.celebration} />}
         <div className="winners-heading">
           <h2 id="winners-title" className="sr-only">{labels.title}</h2>
           <button type="button" className="winners-archive-button" ref={archiveButton}
@@ -148,7 +187,7 @@ export default function Winners({ now }: { now: number }) {
           </button>
           <div className="winners-actions">
             {canRotate && !reducedMotion && <button type="button" className="winners-pause"
-              aria-label={paused ? labels.resume : labels.pause} onClick={() => setPaused(!paused)}>
+              aria-label={paused ? labels.resume : labels.pause} onClick={toggleRotation}>
               <span aria-hidden="true">{paused ? "▶" : "Ⅱ"}</span>
             </button>}
             {canRotate && <div className="winner-controls">

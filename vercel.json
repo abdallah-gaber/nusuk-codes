@@ -1,6 +1,7 @@
 {
   "git": {
     "deploymentEnabled": {
+      "fix/winners-resume-confetti": false,
       "ux/winners-full-rotation": false,
       "ux/winners-celebration": false,
       "ux/mobile-task-first": false,
