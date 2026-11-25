@@ -18,7 +18,8 @@
     "snapshot:preview": "python3 scripts/build_snapshot.py",
     "ingest": "admin/.venv/bin/python -m admin.cli import",
     "codes:update": "admin/.venv/bin/python -m admin.update",
-    "codes:verify-live": "admin/.venv/bin/python -m admin.check_cdn"
+    "codes:verify-live": "admin/.venv/bin/python -m admin.check_cdn",
+    "validate:winners": "vitest run src/winners/data.test.ts"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

@@ -1,6 +1,10 @@
 {
   "git": {
-    "deploymentEnabled": { "ux/mobile-task-first": false }
+    "deploymentEnabled": {
+      "ux/mobile-task-first": false,
+      "feat/daily-winners": false,
+      "data/winners-*": false
+    }
   },
   "headers": [
     {

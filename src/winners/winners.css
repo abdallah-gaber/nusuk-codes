@@ -1,0 +1,130 @@
+.winners {
+  margin-block-start: 12px;
+  padding: 0 12px 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  overflow-wrap: anywhere;
+}
+.winners-heading,
+.winners-ticker,
+.winners-history li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 10px;
+}
+.winners-heading h2 {
+  font-size: 0.9375rem;
+}
+.winners-history-toggle,
+.winners-history a {
+  color: var(--ink);
+  font-size: 0.8125rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.winners-history-toggle {
+  flex-shrink: 0;
+}
+.winners-ticker {
+  align-items: end;
+}
+.winner-current {
+  animation: winner-appear 220ms ease-out;
+}
+@keyframes winner-appear {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}
+.winner-controls {
+  display: flex;
+  align-items: center;
+}
+.winner-controls button {
+  min-width: 44px;
+  border-radius: 8px;
+  font-size: 1.15rem;
+}
+.winner-controls button:hover {
+  background: var(--pale);
+}
+.winner-next-icon {
+  display: inline-block;
+  font-size: 1.5rem;
+}
+:dir(rtl) .winner-next-icon {
+  transform: scaleX(-1);
+}
+.winner-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 8px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.winner-number {
+  white-space: nowrap;
+}
+.winners-encouragement {
+  margin-block: 4px 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+.winner-prize {
+  border-radius: 6px;
+  padding: 1px 6px;
+  background: var(--pale);
+  color: var(--ink);
+}
+.winner-prize--ramadan {
+  font-weight: 700;
+  background: var(--badge-bg);
+  color: var(--badge-ink);
+}
+.winners-history {
+  margin-block-start: 8px;
+  border-block-start: 1px solid var(--border);
+}
+.winners-history p {
+  margin-block: 8px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.winners-history li {
+  flex-wrap: wrap;
+  padding-block: 4px;
+  border-block-start: 1px solid var(--border);
+}
+.winners-history a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+}
+@media (max-width: 360px) {
+  .winners-history-toggle { max-inline-size: 46%; }
+  .winners-ticker--rotating {
+    position: relative;
+    display: block;
+    --winner-controls-space: 96px;
+  }
+  .winners-ticker--rotating .winner-current strong {
+    display: flex;
+    align-items: center;
+    min-block-size: 44px;
+    line-height: 1.45;
+    padding-inline-end: var(--winner-controls-space);
+  }
+  .winner-controls {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .winner-current { animation: none; }
+  .winners-ticker--rotating { --winner-controls-space: 52px; }
+}

@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 1,
+  "presentationEnabled": true,
+  "updatedAt": "2026-11-25T15:22:51Z",
+  "ramadanUmrah": {
+    "startsOn": "2026-11-21",
+    "endsOn": "2026-11-30",
+    "announcementUrl": "https://x.com/MyNusuk/status/2123130734206390426"
+  },
+  "records": [
+    {
+      "id": "winner-0001",
+      "displayName": "AHMED ELSAID MOKHTAR",
+      "country": "EG",
+      "prize": "umrah",
+      "announcedOn": "2026-11-01",
+      "winnerOrdinal": 1,
+      "announcementUrl": "https://x.com/MyNusuk/status/2116985317697753127",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0002",
+      "displayName": "LINA KALASH",
+      "country": "SY",
+      "prize": "umrah",
+      "announcedOn": "2026-11-02",
+      "winnerOrdinal": 2,
+      "announcementUrl": "https://x.com/MyNusuk/status/2117309472120897920",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0003",
+      "displayName": "MD KHALED HUSSAIN CHOWDHURY",
+      "country": "BD",
+      "prize": "umrah",
+      "announcedOn": "2026-11-03",
+      "winnerOrdinal": 3,
+      "announcementUrl": "https://x.com/MyNusuk/status/2117672692434272259",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0004",
+      "displayName": "RASHID AZAD",
+      "country": "PK",
+      "prize": "umrah",
+      "announcedOn": "2026-11-04",
+      "winnerOrdinal": 4,
+      "announcementUrl": "https://x.com/MyNusuk/status/2118018443832078773",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0005",
+      "displayName": "عزه علي ابراهيم رمضان",
+      "country": "EG",
+      "prize": "umrah",
+      "announcedOn": "2026-11-05",
+      "winnerOrdinal": 5,
+      "announcementUrl": "https://x.com/MyNusuk/status/2118335794377044021",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0006",
+      "displayName": "RAHIMA BEGUM",
+      "country": "BD",
+      "prize": "umrah",
+      "announcedOn": "2026-11-06",
+      "winnerOrdinal": 6,
+      "announcementUrl": "https://x.com/MyNusuk/status/2118703284756120059",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0007",
+      "displayName": "لبنى اهنا",
+      "country": "MA",
+      "prize": "umrah",
+      "announcedOn": "2026-11-07",
+      "winnerOrdinal": 7,
+      "announcementUrl": "https://x.com/MyNusuk/status/2119068261203460421",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0008",
+      "displayName": "NAVEED FAZAL",
+      "country": "PK",
+      "prize": "umrah",
+      "announcedOn": "2026-11-08",
+      "winnerOrdinal": 8,
+      "announcementUrl": "https://x.com/MyNusuk/status/2119430615095242990",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0009",
+      "displayName": "هناء صلاح",
+      "country": "EG",
+      "prize": "umrah",
+      "announcedOn": "2026-11-09",
+      "winnerOrdinal": 9,
+      "announcementUrl": "https://x.com/MyNusuk/status/2119782725691331012",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0010",
+      "displayName": "REDWANUL KARIM",
+      "country": "BD",
+      "prize": "umrah",
+      "announcedOn": "2026-11-10",
+      "winnerOrdinal": 10,
+      "announcementUrl": "https://x.com/MyNusuk/status/2120145427185983499",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0011",
+      "displayName": "SHAZIA AYUB",
+      "country": "PK",
+      "prize": "umrah",
+      "announcedOn": "2026-11-11",
+      "winnerOrdinal": 11,
+      "announcementUrl": "https://www.facebook.com/MyNusuk/posts/pfbid0STWtTUij4v9i3VsjXuS8qcLNavwFLEQfjvQhJunRM5Q9E3RrRsvf9fpB8r6qUU8fl",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0012",
+      "displayName": "DHUKA ASAD ABDULRAZAK",
+      "country": "IN",
+      "prize": "umrah",
+      "announcedOn": "2026-11-12",
+      "winnerOrdinal": 12,
+      "announcementUrl": "https://x.com/MyNusuk/status/2120872595000070161",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0013",
+      "displayName": "SAMIRA BINTA ZAKARIA",
+      "country": "BD",
+      "prize": "umrah",
+      "announcedOn": "2026-11-13",
+      "winnerOrdinal": 13,
+      "announcementUrl": "https://x.com/MyNusuk/status/2121252160927322474",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0014",
+      "displayName": "RABIA SAJJAD",
+      "country": "PK",
+      "prize": "umrah",
+      "announcedOn": "2026-11-14",
+      "winnerOrdinal": 14,
+      "announcementUrl": "https://x.com/MyNusuk/status/2121601150197641360",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0015",
+      "displayName": "TUTUS FATMA SRI AGUSTINI",
+      "country": "ID",
+      "prize": "umrah",
+      "announcedOn": "2026-11-15",
+      "winnerOrdinal": 15,
+      "announcementUrl": "https://x.com/MyNusuk/status/2121964869570154535",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0016",
+      "displayName": "خديجة ديوب",
+      "country": "SN",
+      "prize": "umrah",
+      "announcedOn": "2026-11-16",
+      "winnerOrdinal": 16,
+      "announcementUrl": "https://x.com/MyNusuk/status/2122329402243465257",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0017",
+      "displayName": "GHADA NOUR ARFA",
+      "country": "EG",
+      "prize": "umrah",
+      "announcedOn": "2026-11-17",
+      "winnerOrdinal": 17,
+      "announcementUrl": "https://x.com/MyNusuk/status/2122680652935966997",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0018",
+      "displayName": "خالد عبدالرحمن عثمان",
+      "country": "EG",
+      "prize": "umrah",
+      "announcedOn": "2026-11-18",
+      "winnerOrdinal": 18,
+      "announcementUrl": "https://x.com/MyNusuk/status/2123075606636073061",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0019",
+      "displayName": "SAHRA NATASYA",
+      "country": "ID",
+      "prize": "umrah",
+      "announcedOn": "2026-11-19",
+      "winnerOrdinal": 19,
+      "announcementUrl": "https://x.com/MyNusuk/status/2123407317949415774",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0020",
+      "displayName": "حملاوي كاتية",
+      "country": "DZ",
+      "prize": "umrah",
+      "announcedOn": "2026-11-20",
+      "winnerOrdinal": 20,
+      "announcementUrl": "https://x.com/MyNusuk/status/2123850769744986523",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0021",
+      "displayName": "مصعب خالد ابراهيم صخريه",
+      "country": "JO",
+      "prize": "umrah",
+      "announcedOn": "2026-11-21",
+      "winnerOrdinal": 21,
+      "announcementUrl": "https://x.com/MyNusuk/status/2124130588164591964",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0022",
+      "displayName": "محمد رشاد عبدالشافي خلف",
+      "country": "EG",
+      "prize": "umrah",
+      "announcedOn": "2026-11-22",
+      "winnerOrdinal": 22,
+      "announcementUrl": "https://x.com/MyNusuk/status/2124493968993898623",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0023",
+      "displayName": "مروى سيد حنفي قطاريه",
+      "country": "EG",
+      "prize": "umrah",
+      "announcedOn": "2026-11-23",
+      "winnerOrdinal": 23,
+      "announcementUrl": "https://x.com/MyNusuk/status/2124856734304850107",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0024",
+      "displayName": "SITI ZUMAROH",
+      "country": "ID",
+      "prize": "umrah",
+      "announcedOn": "2026-11-24",
+      "winnerOrdinal": 24,
+      "announcementUrl": "https://x.com/MyNusuk/status/2125217840416383363",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    },
+    {
+      "id": "winner-0025",
+      "displayName": "ISMAIL MUSA IBRAHIM",
+      "country": "NG",
+      "prize": "umrah",
+      "announcedOn": "2026-11-25",
+      "winnerOrdinal": 25,
+      "announcementUrl": "https://x.com/MyNusuk/status/2125608660797648914",
+      "verifiedAt": "2026-11-25T15:22:51Z"
+    }
+  ]
+}
