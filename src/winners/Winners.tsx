@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type AnimationEvent, type CSSProperties } from "react";
 import { useLocale } from "../LocaleProvider";
 import { formatDate } from "../presentation";
+import { archiveLabels } from "../archiveLabels";
 import { isRamadanWinner, orderedWinners, type Winner, type WinnersArchive } from "./data";
 import archive from "./data.json";
 import { winnersLabels } from "./labels";
@@ -77,9 +78,80 @@ function flag(country: string) {
   return String.fromCodePoint(...[...country].map((letter) => letter.charCodeAt(0) + 127397));
 }
 
-export default function Winners({ now }: { now: number }) {
-  const { language, locale, n, t } = useLocale();
+function useWinnerPresentation() {
+  const { language, locale, n } = useLocale();
   const labels = winnersLabels[language];
+  const displayNames = new Intl.DisplayNames([locale], { type: "region" });
+
+  function winnerNumber(record: Winner) {
+    if (record.winnerOrdinal === undefined) return undefined;
+    return labels.winnerNumber.replace("{number}", n(record.winnerOrdinal));
+  }
+
+  function winnerName(record: Winner) {
+    const number = winnerNumber(record);
+    return (
+      <div className="winner-name">
+        {number && <span className="winner-number">{number}</span>}
+        <strong><bdi>{record.displayName}</bdi></strong>
+      </div>
+    );
+  }
+
+  function winnerDetails(record: Winner, compact = false) {
+    const ramadan = isRamadanWinner(record, campaign);
+    return (
+      <span className="winner-meta">
+        <span className={ramadan ? "winner-prize winner-prize--ramadan" : "winner-prize"}>
+          {ramadan ? labels.ramadan : labels.umrah}
+        </span>
+        {record.country && <span>
+          <span aria-hidden="true">{flag(record.country)} </span>{displayNames.of(record.country)}
+        </span>}
+        {record.announcedOn && <time dateTime={record.announcedOn}>{formatDate(record.announcedOn, language, compact ? "short" : "long")}</time>}
+      </span>
+    );
+  }
+
+  return { language, labels, winnerNumber, winnerName, winnerDetails };
+}
+
+function WinnerList() {
+  const { t } = useLocale();
+  const { labels, winnerName, winnerDetails } = useWinnerPresentation();
+  return (
+    <ul role="list">
+      {history.map((record) => <li key={record.id}>
+        <div>
+          {winnerName(record)}
+          {winnerDetails(record)}
+        </div>
+        <a href={record.announcementUrl} target="_blank" rel="noopener noreferrer"
+          aria-label={`${labels.source} · ${record.displayName} ${t("newWindow")}`}>
+          {labels.source} <span aria-hidden="true">↗</span>
+        </a>
+      </li>)}
+    </ul>
+  );
+}
+
+export function ArchivedWinners() {
+  const { language, n } = useLocale();
+  const labels = archiveLabels[language];
+  return (
+    <>
+      <h2 id="winners-history-title">{labels.winners} <span>{n(history.length)}</span></h2>
+      {history.length ? <>
+        <p>{winnersLabels[language].partial}</p>
+        <WinnerList />
+      </> : <p>{labels.noWinners}</p>}
+    </>
+  );
+}
+
+export default function Winners({ now }: { now: number }) {
+  const { t } = useLocale();
+  const { language, labels, winnerNumber, winnerName, winnerDetails } = useWinnerPresentation();
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia(motionQuery).matches);
   const [view, setView] = useState<WinnerView>({
     index: 0,
@@ -115,7 +187,6 @@ export default function Winners({ now }: { now: number }) {
 
   if (!data.presentationEnabled || !history.length || !data.updatedAt) return null;
 
-  const displayNames = new Intl.DisplayNames([locale], { type: "region" });
   const old = newestDate && now - Date.parse(newestDate) > weekMs;
 
   function toggleRotation() {
@@ -132,36 +203,6 @@ export default function Winners({ now }: { now: number }) {
     setView(selected);
     setPaused(true);
     setManualWinner(history[selected.index]);
-  }
-
-  function winnerNumber(record: Winner) {
-    if (record.winnerOrdinal === undefined) return undefined;
-    return labels.winnerNumber.replace("{number}", n(record.winnerOrdinal));
-  }
-
-  function winnerName(record: Winner) {
-    const number = winnerNumber(record);
-    return (
-      <div className="winner-name">
-        {number && <span className="winner-number">{number}</span>}
-        <strong><bdi>{record.displayName}</bdi></strong>
-      </div>
-    );
-  }
-
-  function winnerDetails(record: Winner, compact = false) {
-    const ramadan = isRamadanWinner(record, campaign);
-    return (
-      <span className="winner-meta">
-        <span className={ramadan ? "winner-prize winner-prize--ramadan" : "winner-prize"}>
-          {ramadan ? labels.ramadan : labels.umrah}
-        </span>
-        {record.country && <span>
-          <span aria-hidden="true">{flag(record.country)} </span>{displayNames.of(record.country)}
-        </span>}
-        {record.announcedOn && <time dateTime={record.announcedOn}>{formatDate(record.announcedOn, language, compact ? "short" : "long")}</time>}
-      </span>
-    );
   }
 
   const manualNumber = manualWinner && winnerNumber(manualWinner);
@@ -239,18 +280,7 @@ export default function Winners({ now }: { now: number }) {
               .replace("{end}", formatDate(campaign.endsOn, language))}
             <span aria-hidden="true">↗</span><span className="sr-only"> {t("newWindow")}</span>
           </a>}
-          <ul role="list">
-            {history.map((record) => <li key={record.id}>
-              <div>
-                {winnerName(record)}
-                {winnerDetails(record)}
-              </div>
-              <a href={record.announcementUrl} target="_blank" rel="noopener noreferrer"
-                aria-label={`${labels.source} · ${record.displayName} ${t("newWindow")}`}>
-                {labels.source} <span aria-hidden="true">↗</span>
-              </a>
-            </li>)}
-          </ul>
+          <WinnerList />
         </>}
       </dialog>
     </>

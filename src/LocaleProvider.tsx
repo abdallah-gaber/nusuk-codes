@@ -34,7 +34,7 @@ export function LocaleProvider({ children, initialLanguage }: { children: ReactN
   } }), [language]);
 
   useLayoutEffect(() => {
-    applyLocaleMetadata(language, document);
+    applyLocaleMetadata(language, document, __SEASON_STATUS__ === "archived");
     if (!pathLanguage(location.pathname))
       window.history.replaceState(null, "", languagePath(language, location.search, location.hash));
     if (scrollPosition.current !== null) {

@@ -28,7 +28,11 @@ import { AnalyticsPreferences, AnalyticsPreferencesLink, useAnalyticsConsent } f
 import { ConsentBanner } from "./ConsentBanner";
 import { copyText } from "./clipboard";
 import { shareWebsite, whatsappUrl } from "./sharing";
+import { archiveLabels } from "./archiveLabels";
+import { SeasonHero } from "./SeasonHero";
 
+const archived = __SEASON_STATUS__ === "archived";
+const ArchivedWinners = lazy(() => import("./winners/Winners").then(module => ({ default: module.ArchivedWinners })));
 const Winners = __WINNERS_ENABLED__ ? lazy(() => import("./winners/Winners")) : null;
 
 function initialHistory() {
@@ -40,6 +44,8 @@ function initialHistory() {
 }
 function App() {
   const { language, locale, t, n } = useLocale();
+  const archive = archiveLabels[language];
+  const shareText = archived ? archive.description : t("shareText");
   const { consent, choose } = useAnalyticsConsent();
   const [history, setHistory] = useState<History>(initialHistory);
   const [now, setNow] = useState(Date.now);
@@ -68,7 +74,7 @@ function App() {
   const helpSummary = useRef<HTMLElement>(null);
   const [codeNotice, setCodeNotice] = useState<TranslationKey | "">("");
   const order = useMemo(
-    () => shuffled(feed?.codes || [], history.seed),
+    () => archived ? [] : shuffled(feed?.codes || [], history.seed),
     [feed, history.seed],
   );
   async function reload() {
@@ -86,6 +92,7 @@ function App() {
     void reload();
   }, []);
   useEffect(() => {
+    if (archived) return;
     if (feed && restoreCurrent(history, order) !== history) return;
     try {
       writeHistory(localStorage, history);
@@ -125,7 +132,7 @@ function App() {
     };
   }, []);
   useEffect(() => {
-    if (feed) setHistory((h) => restoreCurrent(h, order));
+    if (!archived && feed) setHistory((h) => restoreCurrent(h, order));
   }, [feed, order, history]);
   useEffect(() => {
     if (reset) {
@@ -143,7 +150,7 @@ function App() {
     const timer = setTimeout(() => setCodeNotice(""), 5000);
     return () => clearTimeout(timer);
   }, [codeNotice]);
-  const entry = feed?.codes.find((e) => e.code === history.current);
+  const entry = archived ? undefined : feed?.codes.find((e) => e.code === history.current);
   const current = entry?.code;
   const browserReady = !loading && !error && !!current;
   useEffect(() => {
@@ -203,7 +210,7 @@ function App() {
   }
   async function share() {
     try {
-      const method = await shareWebsite(language, t("brand"), t("shareText"), {
+      const method = await shareWebsite(language, t("brand"), shareText, {
         share: typeof navigator.share === "function" ? (data) => navigator.share(data) : undefined,
         copy: copyText,
       });
@@ -250,7 +257,7 @@ function App() {
     return () => window.clearInterval(timer);
   }, []);
   const stale =
-    feed && now - Date.parse(feed.manifest.generatedAt) > 7 * 86400000;
+    !archived && feed && now - Date.parse(feed.manifest.generatedAt) > 7 * 86400000;
   function undoButton() {
     return (
       <button disabled={!undo} onClick={() => {
@@ -266,8 +273,8 @@ function App() {
   }
   return (
     <>
-      <a className="skip-link" href="#browser">
-        {t("skipToCodes")}</a>
+      <a className="skip-link" href={archived ? "#winners-history" : "#browser"}>
+        {archived ? archive.skip : t("skipToCodes")}</a>
       <header className="header">
         <a className="brand" href="#">
           <span className="brand-mark" aria-hidden="true">✦</span>
@@ -294,12 +301,25 @@ function App() {
         </nav>
       </header>
       <main>
-        {Winners && <div className="winners-slot">
+        {archived ? <>
+          <SeasonHero />
+          <section id="winners-history" className="season-winners" aria-labelledby="winners-history-title" tabIndex={-1}>
+            <Suspense fallback={<h2 id="winners-history-title">{archive.winners}</h2>}><ArchivedWinners /></Suspense>
+          </section>
+        </> : Winners && <div className="winners-slot">
           <Suspense fallback={null}><Winners now={now} /></Suspense>
         </div>}
         <section id="browser" className="code-card" aria-labelledby="browser-title" tabIndex={-1}>
-          <h2 id="browser-title">{t("communityCodes")}</h2>
-          {loading ? (
+          <h2 id="browser-title">{archived ? archive.codes : t("communityCodes")}</h2>
+          {archived ? <>
+            <p>{archive.codeNotice}</p>
+            <CodeList entries={feed?.codes || []} history={history} loading={loading} error={!!error}
+              help={archive.searchHelp} />
+            {error && <div className="state">
+              <p>{t(error)}</p>
+              <button className="primary" onClick={() => void reload()}>{t("retry")}</button>
+            </div>}
+          </> : loading ? (
             <div className="state" role="status">
               <div className="skeleton" />
               <p>{t("loadingCodes")}</p>
@@ -386,7 +406,7 @@ function App() {
         }}>
           <summary>
             <strong>{t("yourJourney")}</strong>
-            {feed && <span className="progress-count">{n(progress.remaining)} {t("remaining")}</span>}
+            {!archived && feed && <span className="progress-count">{n(progress.remaining)} {t("remaining")}</span>}
           </summary>
           <div className="progress-panel">
             <p>{t("localHistory")} {t("progressDisclaimer")}</p>
@@ -402,16 +422,18 @@ function App() {
             <h3>{t("manageHistory")}</h3>
             <div className="history-actions">
               <button onClick={exportHistory}>{t("exportHistory")}</button>
-              <button onClick={() => file.current?.click()}>{t("importHistory")}</button>
-              <button onClick={() => setReset(true)}>{t("resetHistory")}</button>
+              {!archived && <>
+                <button onClick={() => file.current?.click()}>{t("importHistory")}</button>
+                <button onClick={() => setReset(true)}>{t("resetHistory")}</button>
+              </>}
             </div>
             <input ref={file} hidden type="file" accept="application/json,.json"
               onChange={(e) => void importHistory(e.target.files?.[0])} />
             <p>{t("privacyNote")}</p>
           </div>
         </details>
-        <CodeList entries={feed?.codes || []} history={history} loading={loading} error={!!error}
-          onCopy={(code) => void copy(code, "listCopied", "search")} />
+        {!archived && <CodeList entries={feed?.codes || []} history={history} loading={loading} error={!!error}
+          onCopy={(code) => void copy(code, "listCopied", "search")} />}
         {analytics.eligible && !consent && <ConsentBanner onChoose={(value) => {
           choose(value);
           helpSummary.current?.focus({ preventScroll: true });
@@ -419,21 +441,23 @@ function App() {
         <details id="how" className="how" onToggle={(event) => {
           if (event.currentTarget.open) analytics.track("secondary_feature_open", { locale: language, feature: "help" });
         }}>
-          <summary ref={helpSummary}><h2>{t("howNav")}</h2></summary>
+          <summary ref={helpSummary}><h2>{archived ? archive.details : t("howNav")}</h2></summary>
           <div className="help-panel">
-            <ol className="steps">
-              {[
-                [t("step1Title"), t("step1Body")],
-                [t("step2Title"), t("step2Body")],
-                [t("step3Title"), t("step3Body")],
-              ].map(([title, text]) => (
-                <li key={title}>
-                  <h3>{title}</h3>
-                  <p>{text}</p>
-                </li>
-              ))}
-            </ol>
-            <OfficialAppIntro />
+            {archived ? <p>{archive.description} {archive.codeNotice}</p> : <>
+              <ol className="steps">
+                {[
+                  [t("step1Title"), t("step1Body")],
+                  [t("step2Title"), t("step2Body")],
+                  [t("step3Title"), t("step3Body")],
+                ].map(([title, text]) => (
+                  <li key={title}>
+                    <h3>{title}</h3>
+                    <p>{text}</p>
+                  </li>
+                ))}
+              </ol>
+              <OfficialAppIntro />
+            </>}
           </div>
         </details>
         <div className="freshness">
@@ -477,13 +501,13 @@ function App() {
             ],
             [
               t("faq5Question"),
-              t("faq5Answer"),
+              archived ? `${t("localHistory")} ${t("progressDisclaimer")}` : t("faq5Answer"),
             ],
             [
               t("faq6Question"),
               t("faq6Answer"),
             ],
-          ].map(([q, a], index) => (
+          ].map(([q, a], index) => (!archived || index === 2 || index >= 4) && (
             <details key={index}>
               <summary>{q}</summary>
               <p>{a}</p>
@@ -491,7 +515,7 @@ function App() {
           ))}
         </section>
         <section className="closing">
-          <h2>{t("continueNusuk")}</h2>
+          {!archived && <h2>{t("continueNusuk")}</h2>}
           <p>{t("officialTerms")}</p>
           <a
             className="primary"
@@ -501,9 +525,9 @@ function App() {
           >
             {t("openOfficial")}</a>
           <div className="share-actions"><button onClick={() => void share()}>{t("shareSite")}</button>
-          <a href={whatsappUrl(language, t("shareText"))} target="_blank" rel="noopener noreferrer">{t("shareWhatsApp")} <span className="sr-only">{t("newWindow")}</span></a></div>
+          <a href={whatsappUrl(language, shareText)} target="_blank" rel="noopener noreferrer">{t("shareWhatsApp")} <span className="sr-only">{t("newWindow")}</span></a></div>
         </section>
-        <CreatorSupport consent={consent} onCopy={(code) => void copy(code, "creatorCopied", "creator")} />
+        {!archived && <CreatorSupport consent={consent} onCopy={(code) => void copy(code, "creatorCopied", "creator")} />}
         <AnalyticsPreferences consent={consent} onChoose={choose} />
       </main>
       <footer>
@@ -513,11 +537,12 @@ function App() {
           {t("footerDisclaimer")}<br />
           {t("footerPrivacy")}</p>
         <nav className="footer-nav" aria-label={t("navigation")}>
-          <a href="#browser">{t("browseCodes")}</a>
+          {archived && <a href="#winners-history">{archive.winners}</a>}
+          <a href="#browser">{archived ? archive.codes : t("browseCodes")}</a>
           <a href="#how" onClick={() => {
             const help = document.getElementById("how") as HTMLDetailsElement;
             help.open = true;
-          }}>{t("howNav")}</a>
+          }}>{archived ? archive.details : t("howNav")}</a>
           <a href="#faq">{t("faqNav")}</a>
         </nav>
       </footer>

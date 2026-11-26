@@ -7,12 +7,13 @@ import { analytics } from "./analytics";
 const PAGE_SIZE = 24;
 
 
-export function CodeList({ entries, history, loading, error, onCopy }: {
+export function CodeList({ entries, history, loading, error, onCopy, help }: {
   entries: readonly Entry[];
   history: History;
   loading: boolean;
   error: boolean;
-  onCopy: (code: string) => void;
+  onCopy?: (code: string) => void;
+  help?: string;
 }) {
   const { t, n, language } = useLocale();
   const FILTERS: { value: CodeFilter; label: string }[] = [
@@ -52,7 +53,7 @@ export function CodeList({ entries, history, loading, error, onCopy }: {
             aria-describedby="code-list-help" aria-controls="code-results"
             onChange={(event) => { setQuery(event.target.value); setLimit(PAGE_SIZE); }} />
         </div>
-        <p id="code-list-help">{t("searchHelp")}</p>
+        <p id="code-list-help">{help ?? t("searchHelp")}</p>
         <fieldset className="code-filters">
           <legend className="sr-only">{t("filterLabel")}</legend>
           {FILTERS.map((item) => <label key={item.value}>
@@ -69,7 +70,7 @@ export function CodeList({ entries, history, loading, error, onCopy }: {
         <ul id="code-results" className="code-results" aria-label={t("searchResults")}>
           {!loading && !error && shown.map((entry) => <li key={entry.code}>
             <code dir="ltr">{entry.code}</code>
-            <button type="button" aria-label={t("copyLabel", { code: entry.code })} onClick={() => onCopy(entry.code)}>{t("copy")}</button>
+            {onCopy && <button type="button" aria-label={t("copyLabel", { code: entry.code })} onClick={() => onCopy(entry.code)}>{t("copy")}</button>}
           </li>)}
         </ul>
         {!loading && !error && !shown.length && <p className="code-list-empty">{empty}</p>}

@@ -561,3 +561,76 @@ dialog p { margin-block: 8px 12px; }
   padding-inline-start: 1.5em;
 }
 .static-intro nav { padding-block: 12px; }
+
+.season-hero {
+  margin-block-end: 16px;
+  padding: clamp(20px, 5vw, 40px);
+  border: 1px solid #c9a65e;
+  border-radius: 16px;
+  color: #fff8e9;
+  background: radial-gradient(ellipse at top right, #346250 0, #153f34 58%, #123329 100%);
+}
+.season-hero h2 {
+  max-inline-size: 28ch;
+  font-size: clamp(1.6rem, 5vw, 2.5rem);
+  line-height: 1.3;
+  margin-block: 8px 12px;
+  text-wrap: balance;
+}
+:root[lang="ur"] .season-hero h2 { line-height: 1.75; }
+.season-hero p { max-inline-size: 62ch; }
+.season-status { color: #f4d995; font-weight: 700; }
+.season-dates { margin-block-end: 10px; }
+.season-hero nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin-block-start: 16px;
+}
+.season-hero a:not(.primary) {
+  color: #fff8e9;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.season-hero nav a { display: inline-flex; align-items: center; min-block-size: 44px; }
+.season-hero .primary { background: #f4d995; color: #18392e; }
+.season-hero :focus-visible { outline-color: #fff8e9; }
+.season-winners {
+  margin-block-end: 16px;
+  padding: var(--space);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.season-winners h2 { font-size: 1.3rem; }
+.season-winners h2 > span {
+  display: inline-block;
+  margin-inline-start: 4px;
+  padding-inline: 0.5em;
+  border-radius: 1em;
+  background: var(--badge-bg);
+  color: var(--badge-ink);
+}
+.season-winners p { margin-block: 4px 12px; color: var(--muted); }
+.season-winners li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 12px;
+  border-block-start: 1px solid var(--border);
+  padding-block: 6px;
+}
+.season-winners li a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-block-size: 44px;
+  color: var(--ink);
+  font-size: 0.875rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+#browser > .code-list { margin-block-end: 0; }
+.season-winners .winner-number, .season-winners .winner-meta { font-size: 0.875rem; }
