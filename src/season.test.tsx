@@ -42,6 +42,8 @@ describe("owner-controlled season", () => {
     expect(active).not.toContain(archiveLabels[language].title);
     expect(archived).toContain(archiveLabels[language].title);
     expect(archived).toContain(archiveLabels[language].description);
+    expect(archived).toContain(archiveLabels[language].farewell);
+    expect(archiveLabels[language].title).toMatch(/2026|٢٠٢٦/);
     expect(archived).not.toContain(translate(language, "step1Title"));
   });
 
@@ -57,6 +59,7 @@ describe("owner-controlled season", () => {
       expect(hero).toContain(`dateTime="${sample.endsOn}"`);
       expect(hero).toContain(`href="${sample.evidenceUrl}"`);
       expect(hero).toContain(archiveLabels[language].thanks);
+      expect(hero).toContain(archiveLabels[language].farewell);
     } finally {
       season.verifiedDates = previous;
     }

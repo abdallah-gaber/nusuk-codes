@@ -634,3 +634,28 @@ dialog p { margin-block: 8px 12px; }
 }
 #browser > .code-list { margin-block-end: 0; }
 .season-winners .winner-number, .season-winners .winner-meta { font-size: 0.875rem; }
+
+.season-farewell { margin-block-start: 6px; }
+.season-winners li > div {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.season-winners-more {
+  border-block-start: 1px solid var(--border);
+}
+.season-winners-more summary {
+  align-content: center;
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 700;
+}
+.season-winners-more:not([open]) .season-winners-collapse,
+.season-winners-more[open] .season-winners-expand { display: none; }
+.season-official-reference {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

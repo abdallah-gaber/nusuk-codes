@@ -19,6 +19,7 @@ export function SeasonHero() {
         <a href={dates.evidenceUrl}>{labels.datesSource}</a>
       </p>}
       <p>{labels.thanks}</p>
+      <p className="season-farewell">{labels.farewell}</p>
       <nav aria-label={labels.status}>
         <a className="primary" href="#winners-history">{labels.winners}</a>
         <a href="#browser">{labels.codes}</a>

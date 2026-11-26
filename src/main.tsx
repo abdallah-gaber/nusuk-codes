@@ -515,15 +515,20 @@ function App() {
           ))}
         </section>
         <section className="closing">
-          {!archived && <h2>{t("continueNusuk")}</h2>}
-          <p>{t("officialTerms")}</p>
-          <a
-            className="primary"
-            href={"https://services.nusuk.sa/app"} onClick={() => analytics.track("open_nusuk", { locale: language, source: "footer" })}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t("openOfficial")}</a>
+          {archived ? <a className="season-official-reference" href="https://www.nusuk.sa/"
+            target="_blank" rel="noopener noreferrer">
+            {archive.officialReference}<span className="sr-only"> {t("newWindow")}</span>
+          </a> : <>
+            <h2>{t("continueNusuk")}</h2>
+            <p>{t("officialTerms")}</p>
+            <a
+              className="primary"
+              href={"https://services.nusuk.sa/app"} onClick={() => analytics.track("open_nusuk", { locale: language, source: "footer" })}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t("openOfficial")}</a>
+          </>}
           <div className="share-actions"><button onClick={() => void share()}>{t("shareSite")}</button>
           <a href={whatsappUrl(language, shareText)} target="_blank" rel="noopener noreferrer">{t("shareWhatsApp")} <span className="sr-only">{t("newWindow")}</span></a></div>
         </section>

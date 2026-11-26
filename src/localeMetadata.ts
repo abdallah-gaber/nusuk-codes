@@ -52,7 +52,7 @@ export function staticIntroduction(language: Language, archived = false) {
     const labels = archiveLabels[language];
     return '<main class="static-intro"><h1>' + t("brand") + "</h1><h2>" + escapeHtml(labels.title) +
       "</h2><p>" + escapeHtml(labels.description) + "</p><p>" + escapeHtml(labels.thanks) +
-      "</p><p>" + t("footerDisclaimer") + '</p><nav aria-label="' + t("language") + '">' + links + "</nav></main>";
+      "</p><p>" + escapeHtml(labels.farewell) + "</p><p>" + t("footerDisclaimer") + '</p><nav aria-label="' + t("language") + '">' + links + "</nav></main>";
   }
   const steps = [1, 2, 3].map((number) => {
     const title = ("step" + number + "Title") as Parameters<typeof translate>[1];

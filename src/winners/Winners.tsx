@@ -116,12 +116,12 @@ function useWinnerPresentation() {
   return { language, labels, winnerNumber, winnerName, winnerDetails };
 }
 
-function WinnerList() {
+function WinnerList({ records }: { records: readonly Winner[] }) {
   const { t } = useLocale();
   const { labels, winnerName, winnerDetails } = useWinnerPresentation();
   return (
     <ul role="list">
-      {history.map((record) => <li key={record.id}>
+      {records.map((record) => <li key={record.id}>
         <div>
           {winnerName(record)}
           {winnerDetails(record)}
@@ -135,6 +135,8 @@ function WinnerList() {
   );
 }
 
+const latestWinnerCount = 5;
+
 export function ArchivedWinners() {
   const { language, n } = useLocale();
   const labels = archiveLabels[language];
@@ -143,7 +145,14 @@ export function ArchivedWinners() {
       <h2 id="winners-history-title">{labels.winners} <span>{n(history.length)}</span></h2>
       {history.length ? <>
         <p>{winnersLabels[language].partial}</p>
-        <WinnerList />
+        <WinnerList records={history.slice(0, latestWinnerCount)} />
+        {history.length > latestWinnerCount && <details className="season-winners-more">
+          <summary>
+            <span className="season-winners-expand">{labels.viewAll}</span>
+            <span className="season-winners-collapse">{labels.showFewer}</span>
+          </summary>
+          <WinnerList records={history.slice(latestWinnerCount)} />
+        </details>}
       </> : <p>{labels.noWinners}</p>}
     </>
   );
@@ -280,7 +289,7 @@ export default function Winners({ now }: { now: number }) {
               .replace("{end}", formatDate(campaign.endsOn, language))}
             <span aria-hidden="true">↗</span><span className="sr-only"> {t("newWindow")}</span>
           </a>}
-          <WinnerList />
+          <WinnerList records={history} />
         </>}
       </dialog>
     </>
