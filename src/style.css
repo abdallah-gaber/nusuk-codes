@@ -563,30 +563,89 @@ dialog p { margin-block: 8px 12px; }
 .static-intro nav { padding-block: 12px; }
 
 .season-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   margin-block-end: 16px;
-  padding: clamp(20px, 5vw, 40px);
-  border: 1px solid #c9a65e;
+  padding: clamp(18px, 4.5vw, 34px) clamp(14px, 4vw, 32px);
+  border: 1px solid #ba9954;
   border-radius: 16px;
   color: #fff8e9;
-  background: radial-gradient(ellipse at top right, #346250 0, #153f34 58%, #123329 100%);
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 0%, #376451, transparent 71%),
+    linear-gradient(145deg, #183f32, #102d24);
+  box-shadow: inset 0 1px #ffe6aa33;
+}
+.season-emblem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 4vw, 20px);
+  margin-block-end: 7px;
+  color: #f3d895;
+}
+.season-emblem::before, .season-emblem::after {
+  content: "";
+  inline-size: clamp(16px, 8vw, 52px);
+  block-size: 1px;
+  background: linear-gradient(90deg, transparent, #e7c68188, transparent);
+}
+.season-emblem > span { font-size: .75rem; color: #edcf8aa8; }
+.season-trophy {
+  display: grid;
+  place-items: center;
+  inline-size: 48px;
+  block-size: 48px;
+  border: 1px solid #edd38c77;
+  border-radius: 50%;
+  background-color: #172d2455;
+  box-shadow: 0 0 20px #f3d89522;
+}
+.season-trophy svg {
+  inline-size: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .season-hero h2 {
-  max-inline-size: 28ch;
-  font-size: clamp(1.6rem, 5vw, 2.5rem);
-  line-height: 1.3;
-  margin-block: 8px 12px;
+  max-inline-size: 30ch;
+  font-size: clamp(1.5rem, 4.7vw, 2.3rem);
+  line-height: 1.28;
+  margin: 3px auto 8px;
   text-wrap: balance;
 }
-:root[lang="ur"] .season-hero h2 { line-height: 1.75; }
-.season-hero p { max-inline-size: 62ch; }
+:root[lang="ur"] .season-hero h2 { line-height: 1.72; }
+.season-hero p { max-inline-size: 61ch; margin-inline: auto; }
 .season-status { color: #f4d995; font-weight: 700; }
-.season-dates { margin-block-end: 10px; }
+.season-dates { margin-block-end: 8px; }
+.season-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-inline-size: 360px;
+  margin: 14px auto 0;
+  padding-block: 6px;
+  border-block: 1px solid #e4c78955;
+  background: #12312755;
+}
+.season-stats div { display: flex; flex-direction: column; padding-inline: 5px; }
+.season-stats div + div { border-inline-start: 1px solid #e4c78955; }
+.season-stats dt { font-size: .875rem; line-height: 1.45; }
+.season-stats dd {
+  order: -1;
+  color: #ffe3a2;
+  font-size: clamp(1.35rem, 4vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.25;
+}
 .season-hero nav {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 16px;
-  margin-block-start: 16px;
+  justify-content: center;
+  gap: 2px 16px;
+  margin-block-start: 12px;
 }
 .season-hero a:not(.primary) {
   color: #fff8e9;

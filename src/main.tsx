@@ -30,8 +30,11 @@ import { copyText } from "./clipboard";
 import { shareWebsite, whatsappUrl } from "./sharing";
 import { archiveLabels } from "./archiveLabels";
 import { SeasonHero } from "./SeasonHero";
+import { winnerStats, type WinnersArchive } from "./winners/data";
+import winnersData from "./winners/data.json";
 
 const archived = __SEASON_STATUS__ === "archived";
+const finaleStats = __SEASON_STATUS__ === "archived" ? winnerStats((winnersData as WinnersArchive).records) : undefined;
 const ArchivedWinners = lazy(() => import("./winners/Winners").then(module => ({ default: module.ArchivedWinners })));
 const Winners = __WINNERS_ENABLED__ ? lazy(() => import("./winners/Winners")) : null;
 
@@ -302,7 +305,7 @@ function App() {
       </header>
       <main>
         {archived ? <>
-          <SeasonHero />
+          {finaleStats && <SeasonHero stats={finaleStats} />}
           <section id="winners-history" className="season-winners" aria-labelledby="winners-history-title" tabIndex={-1}>
             <Suspense fallback={<h2 id="winners-history-title">{archive.winners}</h2>}><ArchivedWinners /></Suspense>
           </section>

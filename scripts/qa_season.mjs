@@ -22,10 +22,10 @@ const historyKey = `nusuk:history:${manifest.season}:v1`;
 const consentKey = "nusuk:analytics-consent:v1";
 const types = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json" };
 const localeMatrix = {
-  en: ["en", "ltr", "The 2026 Nusuk Challenge season has ended", "View all winners", "Show fewer winners"],
-  ar: ["ar-EG", "rtl", "اختُتم موسم تحدي نسك لعام ٢٠٢٦", "عرض جميع الفائزين", "عرض عدد أقل من الفائزين"],
-  id: ["id-ID", "ltr", "Musim Tantangan Nusuk 2026 telah berakhir", "Lihat semua pemenang", "Tampilkan lebih sedikit pemenang"],
-  ur: ["ur-PK", "rtl", "نسک چیلنج 2026 کا سیزن ختم ہو گیا ہے", "تمام فاتحین دیکھیں", "کم فاتحین دکھائیں"],
+  en: ["en", "ltr", "The 2026 Nusuk Challenge has come to a close", "View all winners", "Show fewer winners"],
+  ar: ["ar-EG", "rtl", "اختُتم تحدي نسك لعام ٢٠٢٦", "عرض جميع الفائزين", "عرض عدد أقل من الفائزين"],
+  id: ["id-ID", "ltr", "Tantangan Nusuk 2026 telah berakhir", "Lihat semua pemenang", "Tampilkan lebih sedikit pemenang"],
+  ur: ["ur-PK", "rtl", "نسک چیلنج 2026 اختتام پذیر ہو گیا", "تمام فاتحین دیکھیں", "کم فاتحین دکھائیں"],
 };
 const screenshotDir = process.env.SEASON_QA_SCREENSHOTS && path.resolve(process.env.SEASON_QA_SCREENSHOTS);
 
@@ -102,6 +102,12 @@ async function assertWinnerRows(winners, expected, locale) {
   }
 }
 
+async function assertHeroStats(page, expected, locale) {
+  const countries = new Set(expected.map(record => record.country).filter(Boolean));
+  const values = await page.locator(".season-stats dd").allTextContents();
+  assert.deepEqual(values, [expected.length.toLocaleString(locale), countries.size.toLocaleString(locale)]);
+}
+
 function ordered(records) {
   return records.toSorted((a, b) =>
     (b.announcedOn ?? "").localeCompare(a.announcedOn ?? "") ||
@@ -139,6 +145,8 @@ for (const [language, [locale, dir, title, viewAll, showFewer]] of Object.entrie
     assert.equal(await page.locator("html").getAttribute("lang"), language);
     assert.equal(await page.locator("html").getAttribute("dir"), dir);
     assert.equal(await page.locator(".season-hero h2").textContent(), title);
+    await assertHeroStats(page, records, locale);
+    assert.equal(await page.locator(".season-hero .winners-confetti").count(), 0);
     const footerReference = page.locator(".closing a.season-official-reference");
     assert.equal(await footerReference.getAttribute("href"), "https://www.nusuk.sa/");
     assert.equal(await page.locator(".closing .primary, a[href='https://services.nusuk.sa/app']").count(), 0);
@@ -192,6 +200,7 @@ for (const [language, [locale, dir, title, viewAll, showFewer]] of Object.entrie
     await action.waitFor();
     assert.equal(await action.innerText(), viewAll);
     const expected = ordered(fixtureArchive.records);
+    await assertHeroStats(page, expected, locale);
     assert.equal(await winners.locator("h2 span").textContent(), expected.length.toLocaleString(locale));
     await assertWinnerRows(winners, expected.slice(0, 5), locale);
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
@@ -208,14 +217,51 @@ for (const [language, [locale, dir, title, viewAll, showFewer]] of Object.entrie
   });
 }
 
+test("finale confetti fills the hero, plays once, and removes itself without resizing the hero", async (t) => {
+  const page = await openPage(t, () => "archived", {
+    viewport: { width: 1200, height: 900 }, reducedMotion: "no-preference",
+  });
+  await page.goto(`${origin}/en/`);
+  const hero = page.locator(".season-hero");
+  const confetti = hero.locator(".winners-confetti--finale");
+  await confetti.waitFor();
+  const bounds = await hero.boundingBox();
+  const dimensions = await confetti.evaluate((layer) => {
+    const style = document.defaultView.getComputedStyle(layer);
+    return { width: layer.getBoundingClientRect().width, duration: style.animationDuration,
+      iterations: style.animationIterationCount, interactive: style.pointerEvents };
+  });
+  assert(dimensions.width >= bounds.width - 2);
+  assert.equal(dimensions.duration, "3.4s");
+  assert.equal(dimensions.iterations, "1");
+  assert.equal(dimensions.interactive, "none");
+  assert.equal(await confetti.getAttribute("aria-hidden"), "true");
+  assert(await confetti.locator(".winners-confetti-piece").count() > 32);
+  await confetti.waitFor({ state: "detached" });
+  assert.deepEqual(await hero.boundingBox(), bounds);
+  await page.locator(".language-select select").selectOption("id");
+  assert.equal(await confetti.count(), 0);
+});
+
+test("switching to reduced motion stops the finale for the current visit", async (t) => {
+  const page = await openPage(t, () => "archived", { reducedMotion: "no-preference" });
+  await page.goto(`${origin}/ar/`);
+  const confetti = page.locator(".season-hero .winners-confetti");
+  await confetti.waitFor();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await confetti.waitFor({ state: "detached" });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  assert.equal(await confetti.count(), 0);
+});
+
 if (screenshotDir) {
   for (const shot of [
-    { language: "ar", colorScheme: "dark", viewport: { width: 390, height: 844 }, name: "archived-arabic-mobile-dark" },
+    { language: "ar", colorScheme: "dark", viewport: { width: 390, height: 844 }, motion: true, name: "archived-arabic-mobile-dark" },
     { language: "en", colorScheme: "light", viewport: { width: 1200, height: 900 }, name: "archived-english-desktop-expanded" },
   ]) {
     test(`capture ${shot.name}`, async (t) => {
-      const { language, name, colorScheme, viewport } = shot;
-      const page = await openPage(t, () => "archived", { colorScheme, viewport });
+      const { language, name, colorScheme, viewport, motion } = shot;
+      const page = await openPage(t, () => "archived", { colorScheme, viewport, reducedMotion: motion ? "no-preference" : "reduce" });
       await page.goto(`${origin}/${language}/`);
       const archive = page.locator(".season-winners");
       await archive.locator("h2 span").waitFor();
@@ -225,11 +271,19 @@ if (screenshotDir) {
         document.activeElement?.blur();
         document.documentElement.scrollTop = 0;
       });
+      if (motion) {
+        await page.locator(".winners-confetti--finale").evaluate(layer => {
+          for (const animation of layer.getAnimations({ subtree: true })) {
+            animation.pause();
+            animation.currentTime = 1_000;
+          }
+        });
+      }
       const { x, y, width, height } = await archive.boundingBox();
       const left = Math.max(0, Math.floor(x - 24));
       await page.screenshot({
         path: path.join(screenshotDir, name + ".png"),
-        animations: "disabled",
+        animations: motion ? "allow" : "disabled",
         fullPage: true,
         clip: { x: left, y: 0, width: Math.min(viewport.width - left, Math.ceil(width + 48)), height: Math.ceil(y + height + 12) },
       });

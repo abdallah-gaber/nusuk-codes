@@ -147,3 +147,11 @@ export function isRamadanWinner(record: Winner, campaign: RamadanCampaign | null
   return Boolean(campaign && record.announcedOn &&
     record.announcedOn >= campaign.startsOn && record.announcedOn <= campaign.endsOn);
 }
+
+export function winnerStats(records: readonly Pick<Winner, "country">[]) {
+  const countries = new Set<string>();
+  for (const { country } of records) {
+    if (country) countries.add(country);
+  }
+  return { winners: records.length, countries: countries.size };
+}

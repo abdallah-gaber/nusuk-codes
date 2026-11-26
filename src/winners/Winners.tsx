@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState, type AnimationEvent, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale } from "../LocaleProvider";
 import { formatDate } from "../presentation";
 import { archiveLabels } from "../archiveLabels";
 import { isRamadanWinner, orderedWinners, type Winner, type WinnersArchive } from "./data";
 import archive from "./data.json";
 import { winnersLabels } from "./labels";
+import { WinnerCelebration, motionQuery, type Celebration } from "./Celebration";
 import "./winners.css";
 
-const motionQuery = "(prefers-reduced-motion: reduce)";
 const rotationMs = 8_000;
 const weekMs = 7 * 86_400_000;
 // The same input is validated before Vite builds the application.
@@ -18,28 +18,8 @@ const newestDate = history[0]?.announcedOn;
 const canRotate = history.length > 1;
 
 type Direction = "newer" | "older";
-type Celebration = "initial" | "automatic" | "manual";
 type Interaction = "blocking" | "resumed" | null;
 type WinnerView = { index: number; direction: Direction; previous?: number; celebration?: Celebration };
-
-const confettiShapes = ["ribbon", "rectangle", "sparkle"] as const;
-const confettiColors = ["#ffcf71", "#68dfae", "#fff0cb"] as const;
-const confettiPieces = Array.from({ length: 32 }, (_, index) => ({
-  shape: confettiShapes[index % confettiShapes.length],
-  style: {
-    "--piece-color": confettiColors[(index + Math.floor(index / 3)) % confettiColors.length],
-    "--piece-x": `${(index + 0.3 + (index % 5) * 0.12) * 100 / 32}%`,
-    "--piece-y": `${-14 + (index * 11) % 30}px`,
-    "--piece-size": `${4 + index % 4}px`,
-    "--piece-drift": `${(index * 17) % 49 - 24}px`,
-    "--piece-fall": `${97 + (index * 19) % 67}px`,
-    "--piece-spin": `${(index % 2 ? -1 : 1) * (135 + (index * 37) % 250)}deg`,
-    "--piece-delay": `${(index * 13) % 8 * 50}ms`,
-    "--piece-duration": `${2600 + index % 5 * 90}ms`,
-  } as CSSProperties,
-}));
-
-const automaticPieces = confettiPieces.filter((_, index) => index % 3 !== 2);
 
 function changeWinner(view: WinnerView, direction: Direction, celebration?: Celebration): WinnerView {
   const step = direction === "older" ? 1 : -1;
@@ -49,29 +29,6 @@ function changeWinner(view: WinnerView, direction: Direction, celebration?: Cele
     direction,
     celebration,
   };
-}
-
-function WinnerCelebration({ kind }: { kind: Celebration }) {
-  const [finished, setFinished] = useState(false);
-  if (finished) return null;
-
-  function finish(event: AnimationEvent<HTMLElement>) {
-    if (event.target === event.currentTarget) setFinished(true);
-  }
-
-  if (kind === "manual") {
-    return <span className="winners-manual-sparkle" aria-hidden="true" onAnimationEnd={finish}>✦</span>;
-  }
-
-  const automatic = kind === "automatic";
-  return (
-    <div className={automatic ? "winners-confetti winners-confetti--automatic" : "winners-confetti"}
-      aria-hidden="true" onAnimationEnd={finish}>
-      {(automatic ? automaticPieces : confettiPieces).map(({ shape, style }, index) => (
-        <span className={`winners-confetti-piece winners-confetti-piece--${shape}`} style={style} key={index} />
-      ))}
-    </div>
-  );
 }
 
 function flag(country: string) {

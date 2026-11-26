@@ -6,6 +6,7 @@ import { languages, direction, SITE_URL, translate } from "./i18n";
 import { localizedHtml } from "./localeMetadata";
 import { LocaleProvider } from "./LocaleProvider";
 import { SeasonHero } from "./SeasonHero";
+import { winnerStats } from "./winners/data";
 import { resolveSeasonStatus, season, validateSeasonDates } from "./season";
 
 const template = readFileSync("index.html", "utf8");
@@ -18,6 +19,13 @@ describe("owner-controlled season", () => {
     for (const value of ["", "Archived", "upcoming", "2026-12-20"]) {
       expect(() => resolveSeasonStatus(value)).toThrow("NUSUK_SEASON_STATUS");
     }
+  });
+
+  it("counts verified records and only distinct known countries", () => {
+    expect(winnerStats([{ country: "EG" }, {}, { country: "ID" }, { country: "EG" }])).toEqual({
+      winners: 4, countries: 2,
+    });
+    expect(winnerStats([])).toEqual({ winners: 0, countries: 0 });
   });
 
   const sample = { startsOn: "2020-01-01", endsOn: "2020-02-29", evidenceUrl: "https://example.com/announcement" };
@@ -49,7 +57,7 @@ describe("owner-controlled season", () => {
 
   it.each(languages)("%s shows season dates only when the reviewed configuration has them", (language) => {
     const previous = season.verifiedDates;
-    const render = () => renderToStaticMarkup(<LocaleProvider initialLanguage={language}><SeasonHero /></LocaleProvider>);
+    const render = () => renderToStaticMarkup(<LocaleProvider initialLanguage={language}><SeasonHero stats={{ winners: 5, countries: 3 }} /></LocaleProvider>);
     try {
       season.verifiedDates = null;
       expect(render()).not.toContain("<time");

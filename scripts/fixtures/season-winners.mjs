@@ -18,7 +18,7 @@ export const fixtureArchive = {
     return {
       id: "winner-" + String(number).padStart(4, "0"),
       displayName: `${name} ${number}`,
-      country,
+      ...(index % 13 === 0 ? {} : { country }),
       prize: "umrah",
       announcedOn: new Date(Date.UTC(2020, 0, number)).toISOString().slice(0, 10),
       winnerOrdinal: number,
