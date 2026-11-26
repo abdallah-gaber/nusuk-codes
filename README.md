@@ -1,54 +1,44 @@
-# مفاتيح نسك · Nusuk Codes Hub
+# Nusuk Codes Hub · مفاتيح نسك
 
-<p dir="rtl" lang="ar">أداة مجتمعية مجانية لتصفح أكواد تحدي نسك والبحث عنها ونسخها، مع حفظ تقدمك على متصفحك. مشروع مستقل غير تابع لنسك أو وزارة الحج والعمرة السعودية. الأكواد غير متحقق من صلاحيتها.</p>
+A free, open-source tool for finding community-shared Nusuk Challenge codes and keeping track of the ones you’ve seen. Browse one code at a time, search the collection, and revisit published winner announcements without creating an account.
 
-An open-source, community-driven companion for discovering and organizing Nusuk challenge codes.
+**[Open Nusuk Codes Hub](https://nusuk.abdallahgaber.dev/)** · [Contribute](CONTRIBUTING.md) · [Report an issue](https://github.com/abdallah-gaber/nusuk-codes/issues)
 
-**[Open Nusuk Codes Hub](https://nusuk.abdallahgaber.dev)** · [Contribute](CONTRIBUTING.md) · [Report a bug](https://github.com/abdallah-gaber/nusuk-codes/issues)
+<p lang="ar" dir="rtl">أداة مجتمعية مجانية لتصفّح أكواد تحدي نسك والبحث فيها وحفظ تقدّمك على متصفّحك، مع أرشيف لإعلانات الفائزين.</p>
 
-This is an independent community project, unaffiliated with Nusuk or the Saudi Ministry of Hajj and Umrah.
+Nusuk Codes Hub is an independent community project, unaffiliated with Nusuk or the Saudi Ministry of Hajj and Umrah.
 
-## Why it exists
+## Take a look
 
-Codes shared across social media are easy to lose and difficult to organize. This started as a personal tool to browse them without repetition and is shared freely so others can search, copy and track their own progress.
+### English desktop
 
-Copy a code, open the official Nusuk app, paste it into the code field and follow the app's verification flow.
+![English desktop view with the emerald Winners Celebration Banner, All winners button, and a code card with Copy and Next actions.](docs/qa/readme-english-desktop.webp)
 
-## Features
+### Arabic mobile
 
-- No-repeat browsing based on this browser's saved history.
-- Quick copying that preserves exact capitalization.
-- Local search with All, Unseen, Tried and Skipped filters.
-- Personal progress, Tried/Skipped annotations and Undo.
-- Local history export/import for manual transfer between browsers.
-- Arabic and Urdu RTL, English and Indonesian LTR, responsive screens and light/dark themes.
-- Official Nusuk sharing links. These may open without navigating or filling the code, so manual copy/paste is the recommended flow.
+![Right-to-left Arabic phone view with the Winners Celebration Banner above a left-to-right community code and Arabic browsing controls.](docs/qa/readme-arabic-mobile.webp)
 
-![Production Arabic interface showing 11,775 codes, the code browser, personal progress and local search](docs/qa/readme-production-desktop.jpg)
+Captured on the live site on November 26, 2026. The collection and winner announcements change as releases are published.
 
-## Current season
+## What you can do
 
-The checked-in November 2026 snapshot contains **11,779 published, distinct code strings**, checked against the manifest and snapshot on November 18, 2026. Every entry remains **community-unverified**. Distinct strings do not establish working codes, successful redemption or eligibility. Consult the checked-in manifest for the latest release count. [Snapshot manifest](public/data/manifest.json)
+- **Browse and search.** Step through community codes without repeating ones you’ve seen in this browser. Search locally and filter by All, Unseen, Tried, or Skipped.
+- **Copy codes as shared.** Paste them into the official Nusuk app. The Open Nusuk link may also prefill the code, depending on your device.
+- **Keep your place.** Mark codes tried or skipped, undo your last action, and export or import progress to move it between browsers.
+- **Explore winner announcements.** The Winners Celebration Banner opens a community archive of winner announcements with links to the original Nusuk posts. Coverage may be incomplete.
+- **Choose your language and theme.** Use [العربية](https://nusuk.abdallahgaber.dev/ar/), [English](https://nusuk.abdallahgaber.dev/en/), [Bahasa Indonesia](https://nusuk.abdallahgaber.dev/id/), or [اردو](https://nusuk.abdallahgaber.dev/ur/), with RTL support for Arabic and Urdu and light and dark themes.
 
-## Principles
+## Data and privacy
 
-- **Free and open source.** The source code is MIT-licensed and contributions are welcome.
-- **Privacy first.** Progress stays in browser storage with manual export/import. Production builds include Vercel Web Analytics for page views. Optional Google Analytics requires production configuration and consent. Application tracking events send no code values or local history. [Analytics, privacy and owner setup](docs/GROWTH_AND_ANALYTICS.md)
-- **Transparent provenance.** Public snapshots expose source domains and observation dates. Administrative provenance is maintained separately.
-- **Safety and honest claims.** No login, passwords or OTPs are needed here. Syntax and publication approval never establish redemption.
-- **Season awareness.** Codes and local history belong to a specific season. Old codes are not automatically carried forward.
+The [snapshot manifest](public/data/manifest.json) shows the current release’s season, publication date, and code count. Community codes are unverified for redemption. Nusuk determines code acceptance, eligibility, and rewards. See the [data provenance](DATA_PROVENANCE.md) and [season policy](docs/SEASONS.md).
 
-## Seasons and future development
+Progress stays in browser storage. The site never asks for a Nusuk password or one-time code. Production includes Vercel Web Analytics for page views. Google Analytics, when configured, requires consent, which you can change in Analytics preferences. Application analytics events omit code values and local history. [Privacy and analytics details](docs/GROWTH_AND_ANALYTICS.md)
 
-For each officially announced edition, review the challenge and rules, prepare a distinct season, collect and validate public community sources, and publish reviewed, integrity-checked snapshots. Preserve completed seasons and reassess possible code reuse using fresh evidence before owner approval. Multi-season support is a future implementation decision. [Season policy](docs/SEASONS.md)
+## Develop locally
 
-## Contribute
+The site uses React, TypeScript, Vite, and Tailwind CSS. Vercel serves the static site and code snapshot. Firestore is reserved for the separate Python admin pipeline. [Architecture](ARCHITECTURE.md) · [Operations](OPERATIONS.md) · [Owner setup](SETUP_OWNER.md)
 
-Help with bugs, Arabic wording, accessibility, RTL layouts, tests or small improvements. Start with an Issue and send a focused PR. Read the contribution guide and community standards before participating. [CONTRIBUTING.md](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
-
-## Development
-
-Use **Node.js 22.12+** and npm. Frontend tests also invoke **Python 3.13** for snapshot compatibility, without requiring Firebase credentials or the admin SDK.
+Use Node.js 22.12+ and npm. The frontend tests also use Python 3.13 for a snapshot compatibility check. Firebase credentials are unnecessary for local frontend development.
 
 ```sh
 git clone https://github.com/abdallah-gaber/nusuk-codes.git
@@ -57,7 +47,7 @@ npm ci
 npm run dev
 ```
 
-Open the local address printed by Vite. Run the frontend checks before a PR.
+Open the address printed by Vite. Run these checks before opening a PR.
 
 ```sh
 npm run lint
@@ -66,12 +56,10 @@ npm test
 npm run build
 ```
 
-Vite builds the static site into `dist/`. The public app loads integrity-checked CDN snapshots and keeps browsing local. Public visitors never access Firestore.
+The production build goes to `dist/`. For administrative work, follow the [quick import guide](docs/QUICK_IMPORT.md) or the [full admin runbook](docs/PHASE2A_ADMIN.md).
 
-Technical details live in the architecture and provenance docs. Privileged administration has separate setup and runbooks, including additional Python and emulator checks. [Architecture](ARCHITECTURE.md) · [Provenance](DATA_PROVENANCE.md) · [Operations](OPERATIONS.md) · [Owner setup](SETUP_OWNER.md) · [Quick Import](docs/QUICK_IMPORT.md) · [Full admin runbook](docs/PHASE2A_ADMIN.md)
+## Contributing and license
 
-## License and disclaimer
+Bug reports, translation fixes, accessibility improvements, and focused pull requests are welcome. See the [contribution guide](CONTRIBUTING.md), [code of conduct](CODE_OF_CONDUCT.md), and [issue tracker](https://github.com/abdallah-gaber/nusuk-codes/issues).
 
-Source code is available under the MIT License. This does not assert ownership of third-party community codes, official Nusuk branding or external data sources, or grant rights to them. [LICENSE](LICENSE)
-
-No code redemption, reward or eligibility is guaranteed. The official Nusuk app and its current rules remain the source of truth for challenge participation.
+The source code is [MIT-licensed](LICENSE). Third-party community codes, Nusuk branding, and external source material retain their own rights.
