@@ -7,6 +7,11 @@ import { languages, pathLanguage } from "./src/i18n";
 import { localizedHtml } from "./src/localeMetadata";
 import { validateWinners } from "./src/winners/data";
 import winners from "./src/winners/data.json";
+import { resolveSeasonStatus, season, validateSeasonDates } from "./src/season";
+
+const seasonStatus = resolveSeasonStatus(process.env.NUSUK_SEASON_STATUS);
+const archived = seasonStatus === "archived";
+validateSeasonDates(season.verifiedDates);
 
 function languagePages(): Plugin {
   let output = "";
@@ -14,7 +19,7 @@ function languagePages(): Plugin {
     name: "static-language-pages",
     configResolved(config) { output = resolve(config.root, config.build.outDir); },
     transformIndexHtml(html, context) {
-      return localizedHtml(html, pathLanguage((context.originalUrl || context.path).split("?")[0]) || "ar", process.env.VERCEL_ENV === "preview");
+      return localizedHtml(html, pathLanguage((context.originalUrl || context.path).split("?")[0]) || "ar", process.env.VERCEL_ENV === "preview", archived);
     },
     configurePreviewServer(server) {
       server.middlewares.use((request, _response, next) => {
@@ -30,7 +35,7 @@ function languagePages(): Plugin {
       for (const language of languages) {
         const folder = resolve(output, language);
         mkdirSync(folder, { recursive: true });
-        writeFileSync(resolve(folder, "index.html"), localizedHtml(String(index.source), language, process.env.VERCEL_ENV === "preview"));
+        writeFileSync(resolve(folder, "index.html"), localizedHtml(String(index.source), language, process.env.VERCEL_ENV === "preview", archived));
       }
     },
   };
@@ -38,6 +43,7 @@ function languagePages(): Plugin {
 export default defineConfig({
   define: {
     "import.meta.env.VITE_DEPLOYMENT_ENV": JSON.stringify(process.env.VERCEL_ENV || ""),
+    __SEASON_STATUS__: JSON.stringify(seasonStatus),
     __WINNERS_ENABLED__: JSON.stringify(validateWinners(winners).presentationEnabled),
   },
   plugins: [react(), tailwindcss(), languagePages()],

@@ -561,3 +561,160 @@ dialog p { margin-block: 8px 12px; }
   padding-inline-start: 1.5em;
 }
 .static-intro nav { padding-block: 12px; }
+
+.season-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin-block-end: 16px;
+  padding: clamp(18px, 4.5vw, 34px) clamp(14px, 4vw, 32px);
+  border: 1px solid #ba9954;
+  border-radius: 16px;
+  color: #fff8e9;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 0%, #376451, transparent 71%),
+    linear-gradient(145deg, #183f32, #102d24);
+  box-shadow: inset 0 1px #ffe6aa33;
+}
+.season-emblem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 4vw, 20px);
+  margin-block-end: 7px;
+  color: #f3d895;
+}
+.season-emblem::before, .season-emblem::after {
+  content: "";
+  inline-size: clamp(16px, 8vw, 52px);
+  block-size: 1px;
+  background: linear-gradient(90deg, transparent, #e7c68188, transparent);
+}
+.season-emblem > span { font-size: .75rem; color: #edcf8aa8; }
+.season-trophy {
+  display: grid;
+  place-items: center;
+  inline-size: 48px;
+  block-size: 48px;
+  border: 1px solid #edd38c77;
+  border-radius: 50%;
+  background-color: #172d2455;
+  box-shadow: 0 0 20px #f3d89522;
+}
+.season-trophy svg {
+  inline-size: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.season-hero h2 {
+  max-inline-size: 30ch;
+  font-size: clamp(1.5rem, 4.7vw, 2.3rem);
+  line-height: 1.28;
+  margin: 3px auto 8px;
+  text-wrap: balance;
+}
+:root[lang="ur"] .season-hero h2 { line-height: 1.72; }
+.season-hero p { max-inline-size: 61ch; margin-inline: auto; }
+.season-status { color: #f4d995; font-weight: 700; }
+.season-dates { margin-block-end: 8px; }
+.season-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-inline-size: 360px;
+  margin: 14px auto 0;
+  padding-block: 6px;
+  border-block: 1px solid #e4c78955;
+  background: #12312755;
+}
+.season-stats div { display: flex; flex-direction: column; padding-inline: 5px; }
+.season-stats div + div { border-inline-start: 1px solid #e4c78955; }
+.season-stats dt { font-size: .875rem; line-height: 1.45; }
+.season-stats dd {
+  order: -1;
+  color: #ffe3a2;
+  font-size: clamp(1.35rem, 4vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.25;
+}
+.season-hero nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px 16px;
+  margin-block-start: 12px;
+}
+.season-hero a:not(.primary) {
+  color: #fff8e9;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.season-hero nav a { display: inline-flex; align-items: center; min-block-size: 44px; }
+.season-hero .primary { background: #f4d995; color: #18392e; }
+.season-hero :focus-visible { outline-color: #fff8e9; }
+.season-winners {
+  margin-block-end: 16px;
+  padding: var(--space);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.season-winners h2 { font-size: 1.3rem; }
+.season-winners h2 > span {
+  display: inline-block;
+  margin-inline-start: 4px;
+  padding-inline: 0.5em;
+  border-radius: 1em;
+  background: var(--badge-bg);
+  color: var(--badge-ink);
+}
+.season-winners p { margin-block: 4px 12px; color: var(--muted); }
+.season-winners li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 12px;
+  border-block-start: 1px solid var(--border);
+  padding-block: 6px;
+}
+.season-winners li a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-block-size: 44px;
+  color: var(--ink);
+  font-size: 0.875rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+#browser > .code-list { margin-block-end: 0; }
+.season-winners .winner-number, .season-winners .winner-meta { font-size: 0.875rem; }
+
+.season-farewell { margin-block-start: 6px; }
+.season-winners li > div {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.season-winners-more {
+  border-block-start: 1px solid var(--border);
+}
+.season-winners-more summary {
+  align-content: center;
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 700;
+}
+.season-winners-more:not([open]) .season-winners-collapse,
+.season-winners-more[open] .season-winners-expand { display: none; }
+.season-official-reference {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

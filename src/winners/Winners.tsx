@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState, type AnimationEvent, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale } from "../LocaleProvider";
 import { formatDate } from "../presentation";
+import { archiveLabels } from "../archiveLabels";
 import { isRamadanWinner, orderedWinners, type Winner, type WinnersArchive } from "./data";
 import archive from "./data.json";
 import { winnersLabels } from "./labels";
+import { WinnerCelebration, motionQuery, type Celebration } from "./Celebration";
 import "./winners.css";
 
-const motionQuery = "(prefers-reduced-motion: reduce)";
 const rotationMs = 8_000;
 const weekMs = 7 * 86_400_000;
 // The same input is validated before Vite builds the application.
@@ -17,28 +18,8 @@ const newestDate = history[0]?.announcedOn;
 const canRotate = history.length > 1;
 
 type Direction = "newer" | "older";
-type Celebration = "initial" | "automatic" | "manual";
 type Interaction = "blocking" | "resumed" | null;
 type WinnerView = { index: number; direction: Direction; previous?: number; celebration?: Celebration };
-
-const confettiShapes = ["ribbon", "rectangle", "sparkle"] as const;
-const confettiColors = ["#ffcf71", "#68dfae", "#fff0cb"] as const;
-const confettiPieces = Array.from({ length: 32 }, (_, index) => ({
-  shape: confettiShapes[index % confettiShapes.length],
-  style: {
-    "--piece-color": confettiColors[(index + Math.floor(index / 3)) % confettiColors.length],
-    "--piece-x": `${(index + 0.3 + (index % 5) * 0.12) * 100 / 32}%`,
-    "--piece-y": `${-14 + (index * 11) % 30}px`,
-    "--piece-size": `${4 + index % 4}px`,
-    "--piece-drift": `${(index * 17) % 49 - 24}px`,
-    "--piece-fall": `${97 + (index * 19) % 67}px`,
-    "--piece-spin": `${(index % 2 ? -1 : 1) * (135 + (index * 37) % 250)}deg`,
-    "--piece-delay": `${(index * 13) % 8 * 50}ms`,
-    "--piece-duration": `${2600 + index % 5 * 90}ms`,
-  } as CSSProperties,
-}));
-
-const automaticPieces = confettiPieces.filter((_, index) => index % 3 !== 2);
 
 function changeWinner(view: WinnerView, direction: Direction, celebration?: Celebration): WinnerView {
   const step = direction === "older" ? 1 : -1;
@@ -50,36 +31,93 @@ function changeWinner(view: WinnerView, direction: Direction, celebration?: Cele
   };
 }
 
-function WinnerCelebration({ kind }: { kind: Celebration }) {
-  const [finished, setFinished] = useState(false);
-  if (finished) return null;
-
-  function finish(event: AnimationEvent<HTMLElement>) {
-    if (event.target === event.currentTarget) setFinished(true);
-  }
-
-  if (kind === "manual") {
-    return <span className="winners-manual-sparkle" aria-hidden="true" onAnimationEnd={finish}>✦</span>;
-  }
-
-  const automatic = kind === "automatic";
-  return (
-    <div className={automatic ? "winners-confetti winners-confetti--automatic" : "winners-confetti"}
-      aria-hidden="true" onAnimationEnd={finish}>
-      {(automatic ? automaticPieces : confettiPieces).map(({ shape, style }, index) => (
-        <span className={`winners-confetti-piece winners-confetti-piece--${shape}`} style={style} key={index} />
-      ))}
-    </div>
-  );
-}
-
 function flag(country: string) {
   return String.fromCodePoint(...[...country].map((letter) => letter.charCodeAt(0) + 127397));
 }
 
-export default function Winners({ now }: { now: number }) {
-  const { language, locale, n, t } = useLocale();
+function useWinnerPresentation() {
+  const { language, locale, n } = useLocale();
   const labels = winnersLabels[language];
+  const displayNames = new Intl.DisplayNames([locale], { type: "region" });
+
+  function winnerNumber(record: Winner) {
+    if (record.winnerOrdinal === undefined) return undefined;
+    return labels.winnerNumber.replace("{number}", n(record.winnerOrdinal));
+  }
+
+  function winnerName(record: Winner) {
+    const number = winnerNumber(record);
+    return (
+      <div className="winner-name">
+        {number && <span className="winner-number">{number}</span>}
+        <strong><bdi>{record.displayName}</bdi></strong>
+      </div>
+    );
+  }
+
+  function winnerDetails(record: Winner, compact = false) {
+    const ramadan = isRamadanWinner(record, campaign);
+    return (
+      <span className="winner-meta">
+        <span className={ramadan ? "winner-prize winner-prize--ramadan" : "winner-prize"}>
+          {ramadan ? labels.ramadan : labels.umrah}
+        </span>
+        {record.country && <span>
+          <span aria-hidden="true">{flag(record.country)} </span>{displayNames.of(record.country)}
+        </span>}
+        {record.announcedOn && <time dateTime={record.announcedOn}>{formatDate(record.announcedOn, language, compact ? "short" : "long")}</time>}
+      </span>
+    );
+  }
+
+  return { language, labels, winnerNumber, winnerName, winnerDetails };
+}
+
+function WinnerList({ records }: { records: readonly Winner[] }) {
+  const { t } = useLocale();
+  const { labels, winnerName, winnerDetails } = useWinnerPresentation();
+  return (
+    <ul role="list">
+      {records.map((record) => <li key={record.id}>
+        <div>
+          {winnerName(record)}
+          {winnerDetails(record)}
+        </div>
+        <a href={record.announcementUrl} target="_blank" rel="noopener noreferrer"
+          aria-label={`${labels.source} · ${record.displayName} ${t("newWindow")}`}>
+          {labels.source} <span aria-hidden="true">↗</span>
+        </a>
+      </li>)}
+    </ul>
+  );
+}
+
+const latestWinnerCount = 5;
+
+export function ArchivedWinners() {
+  const { language, n } = useLocale();
+  const labels = archiveLabels[language];
+  return (
+    <>
+      <h2 id="winners-history-title">{labels.winners} <span>{n(history.length)}</span></h2>
+      {history.length ? <>
+        <p>{winnersLabels[language].partial}</p>
+        <WinnerList records={history.slice(0, latestWinnerCount)} />
+        {history.length > latestWinnerCount && <details className="season-winners-more">
+          <summary>
+            <span className="season-winners-expand">{labels.viewAll}</span>
+            <span className="season-winners-collapse">{labels.showFewer}</span>
+          </summary>
+          <WinnerList records={history.slice(latestWinnerCount)} />
+        </details>}
+      </> : <p>{labels.noWinners}</p>}
+    </>
+  );
+}
+
+export default function Winners({ now }: { now: number }) {
+  const { t } = useLocale();
+  const { language, labels, winnerNumber, winnerName, winnerDetails } = useWinnerPresentation();
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia(motionQuery).matches);
   const [view, setView] = useState<WinnerView>({
     index: 0,
@@ -115,7 +153,6 @@ export default function Winners({ now }: { now: number }) {
 
   if (!data.presentationEnabled || !history.length || !data.updatedAt) return null;
 
-  const displayNames = new Intl.DisplayNames([locale], { type: "region" });
   const old = newestDate && now - Date.parse(newestDate) > weekMs;
 
   function toggleRotation() {
@@ -132,36 +169,6 @@ export default function Winners({ now }: { now: number }) {
     setView(selected);
     setPaused(true);
     setManualWinner(history[selected.index]);
-  }
-
-  function winnerNumber(record: Winner) {
-    if (record.winnerOrdinal === undefined) return undefined;
-    return labels.winnerNumber.replace("{number}", n(record.winnerOrdinal));
-  }
-
-  function winnerName(record: Winner) {
-    const number = winnerNumber(record);
-    return (
-      <div className="winner-name">
-        {number && <span className="winner-number">{number}</span>}
-        <strong><bdi>{record.displayName}</bdi></strong>
-      </div>
-    );
-  }
-
-  function winnerDetails(record: Winner, compact = false) {
-    const ramadan = isRamadanWinner(record, campaign);
-    return (
-      <span className="winner-meta">
-        <span className={ramadan ? "winner-prize winner-prize--ramadan" : "winner-prize"}>
-          {ramadan ? labels.ramadan : labels.umrah}
-        </span>
-        {record.country && <span>
-          <span aria-hidden="true">{flag(record.country)} </span>{displayNames.of(record.country)}
-        </span>}
-        {record.announcedOn && <time dateTime={record.announcedOn}>{formatDate(record.announcedOn, language, compact ? "short" : "long")}</time>}
-      </span>
-    );
   }
 
   const manualNumber = manualWinner && winnerNumber(manualWinner);
@@ -239,18 +246,7 @@ export default function Winners({ now }: { now: number }) {
               .replace("{end}", formatDate(campaign.endsOn, language))}
             <span aria-hidden="true">↗</span><span className="sr-only"> {t("newWindow")}</span>
           </a>}
-          <ul role="list">
-            {history.map((record) => <li key={record.id}>
-              <div>
-                {winnerName(record)}
-                {winnerDetails(record)}
-              </div>
-              <a href={record.announcementUrl} target="_blank" rel="noopener noreferrer"
-                aria-label={`${labels.source} · ${record.displayName} ${t("newWindow")}`}>
-                {labels.source} <span aria-hidden="true">↗</span>
-              </a>
-            </li>)}
-          </ul>
+          <WinnerList records={history} />
         </>}
       </dialog>
     </>

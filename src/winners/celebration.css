@@ -1,0 +1,80 @@
+.winners-confetti {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, #000 25%, #0006 42% 68%, #000 88%);
+  animation: winners-reveal 3.4s linear both;
+}
+.winners-confetti-piece {
+  position: absolute;
+  top: var(--piece-y);
+  left: var(--piece-x);
+  inline-size: var(--piece-size);
+  block-size: calc(var(--piece-size) * 0.75);
+  border-radius: 1px;
+  background: var(--piece-color);
+  animation: winners-confetti-fall var(--piece-duration) var(--piece-delay) cubic-bezier(0.32, 0.12, 0.6, 1) both;
+}
+.winners-confetti--automatic {
+  --confetti-opacity: 0.8;
+  animation-duration: 2.1s;
+}
+.winners-confetti--automatic .winners-confetti-piece {
+  animation-duration: calc(var(--piece-duration) * 0.62);
+  animation-delay: calc(var(--piece-delay) * 0.6);
+}
+.winners-confetti-piece--ribbon {
+  inline-size: calc(var(--piece-size) * 0.65);
+  block-size: calc(var(--piece-size) * 2.2);
+  clip-path: polygon(6% 0, 100% 9%, 64% 40%, 99% 72%, 48% 100%, 0 87%, 45% 66%, 8% 35%);
+}
+.winners-confetti-piece--sparkle {
+  inline-size: calc(var(--piece-size) + 4px);
+  block-size: calc(var(--piece-size) + 4px);
+  clip-path: polygon(50% 0, 61% 38%, 100% 50%, 61% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+}
+.winners-manual-sparkle {
+  position: absolute;
+  z-index: -1;
+  inset-block-end: 11px;
+  inset-inline-end: 12px;
+  color: var(--winners-gold);
+  font-size: 0.875rem;
+  pointer-events: none;
+  animation: winners-sparkle 960ms ease-out both;
+}
+@keyframes winners-reveal {
+  from, 99% { opacity: var(--confetti-opacity, 1); }
+  to { opacity: 0; }
+}
+@keyframes winners-confetti-fall {
+  0% { opacity: 0; transform: translate3d(0, -12px, 0) rotate(0deg); }
+  16% { opacity: 0.95; }
+  48% { transform: translate3d(calc(var(--piece-drift) * -0.4), calc(var(--piece-fall-distance, var(--piece-fall)) * 0.48), 0) rotate(calc(var(--piece-spin) * 0.42)); }
+  72% { opacity: 0.8; }
+  100% { opacity: 0; transform: translate3d(var(--piece-drift), var(--piece-fall-distance, var(--piece-fall)), 0) rotate(var(--piece-spin)); }
+}
+@keyframes winners-sparkle {
+  0%, 100% { opacity: 0; transform: scale(0.65); }
+  40% { opacity: 0.65; transform: scale(1); }
+}
+
+.winners-confetti--finale {
+  mask-image: linear-gradient(#000 0% 42%, #0009 65%, transparent 93%),
+    linear-gradient(90deg, #000 0% 14%, #0008 36% 64%, #000 86% 100%);
+  mask-composite: intersect;
+}
+.winners-confetti--finale .winners-confetti-piece {
+  --piece-fall-distance: calc(var(--piece-fall) * 1.8);
+  filter: drop-shadow(0 0 2px #f6d58555);
+}
+
+@media (max-width: 420px) {
+  .winners-confetti:not(.winners-confetti--finale) .winners-confetti-piece:nth-child(5n) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .winners-confetti,
+  .winners-manual-sparkle { visibility: hidden; animation: none; }
+}
